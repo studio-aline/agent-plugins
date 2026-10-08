@@ -11,7 +11,7 @@ test("each remaining host receives only its own model-routing table", () => {
   const claude = readSkill("guidance");
   const antigravity = readSkill("antigravity-guidance");
 
-  assert.match(claude, /`sonnet-5`/);
+  assert.match(claude, /`sonnet-5\.5`/);
   assert.doesNotMatch(claude, /`gpt-5\.5`|`gemini-3\.5-flash`/);
   assert.match(antigravity, /`gemini-3\.5-flash`/);
   assert.doesNotMatch(antigravity, /`sonnet-5`|`gpt-5\.5`/);

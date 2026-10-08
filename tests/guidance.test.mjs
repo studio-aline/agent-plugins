@@ -19,7 +19,9 @@ test("marketplace contains the guidance plugin", () => {
 test("shared guidance contains Claude policy without Codex execution rules", () => {
   const skill = fs.readFileSync(path.join(plugin, "skills", "model-routing", "SKILL.md"), "utf8");
   assert.match(skill, /Team Claude model-routing policy/);
-  assert.match(skill, /Never select Haiku/);
+  assert.match(skill, /\| `haiku-5\.5`\s+\|/);
+  assert.match(skill, /Never select `haiku-5\.5` for work that ships, plan or implementation reviews/);
+  assert.doesNotMatch(skill, /Never select Haiku\./);
   assert.doesNotMatch(skill, /codex_/i);
   assert.doesNotMatch(skill, /\/codex:/i);
 });

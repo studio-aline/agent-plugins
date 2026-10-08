@@ -11,11 +11,15 @@ the team's effective cost rather than public list price. Intelligence measures
 how difficult a problem can be delegated unsupervised. Taste covers UI/UX, code
 quality, API design, and copy.
 
-| model       | cost | intelligence | taste |
-| ----------- | ---: | -----------: | ----: |
-| `sonnet-5`  |    5 |            5 |     7 |
-| `opus-5.5`  |    4 |            7 |     8 |
-| `fable-5.1` |    2 |            9 |     9 |
+| model        | cost | intelligence | taste |
+| ------------ | ---: | -----------: | ----: |
+| `haiku-5.5`  |   10 |            3 |     4 |
+| `sonnet-5.5` |    5 |            5 |     7 |
+| `opus-5.5`   |    4 |            7 |     8 |
+| `fable-5.1`  |    2 |            9 |     9 |
+
+The `haiku-5.5` scores are estimates, not measurements. Adjust them when team
+experience provides better evidence.
 
 ## Selection rules
 
@@ -26,7 +30,12 @@ quality, API design, and copy.
   then cost.
 - User-facing UI, copy, and API design require taste 7 or higher.
 - Review plans and implementations with `fable-5.1` (if eligible) or `opus-5.5`.
-- Never select Haiku.
+- Select `haiku-5.5` only for mechanical, easily verified, cheaply rerunnable
+  delegation: read-only search and exploration fan-out, summarizing files, logs,
+  or diffs, classification, extraction, format conversion, and bulk repetitive
+  edits. If the result misses the bar, rerun with `sonnet-5.5`.
+- Never select `haiku-5.5` for work that ships, plan or implementation reviews,
+  ambiguous requirements, or high-risk changes such as security or migrations.
 - Claude models run through the Agent or Workflow model parameter.
 
 ## Fable availability

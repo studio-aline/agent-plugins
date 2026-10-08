@@ -29,11 +29,11 @@ quality, API design, and copy.
 
 | model         | cost | intelligence | taste |
 | ------------- | ---: | -----------: | ----: |
-| `gpt-6-luna`  |   10 |            6 |     4 |
-| `gpt-6-sol`   |    4 |            8 |     5 |
-| `gpt-6-astra` |    2 |            9 |     5 |
+| `gpt-6-luna`  |   10 |            5 |     4 |
+| `gpt-6.1-sol` |    4 |            7 |     8 |
+| `gpt-6-astra` |    2 |            9 |     9 |
 
-The `gpt-6-astra` and `gpt-6-sol` scores are estimates, not measurements.
+The `gpt-6-astra` and `gpt-6.1-sol` scores are estimates, not measurements.
 Adjust them when team experience provides better evidence.
 
 - Use `gpt-6-luna` for bulk or mechanical work when the user requests a model
