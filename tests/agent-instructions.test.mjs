@@ -21,7 +21,8 @@ test("agent instructions require Claude Code, Codex, and Antigravity skill packa
 });
 
 for (const entrypoint of ["CLAUDE.md", "GEMINI.md"]) {
-  test(`${entrypoint} delegates to the canonical agent instructions`, () => {
-    assert.match(fs.readFileSync(path.join(root, entrypoint), "utf8"), /AGENTS\.md/);
+  test(`${entrypoint} mirrors the canonical agent instructions`, () => {
+    const canonical = fs.readFileSync(path.join(root, "AGENTS.md"), "utf8");
+    assert.equal(fs.readFileSync(path.join(root, entrypoint), "utf8"), canonical);
   });
 }
