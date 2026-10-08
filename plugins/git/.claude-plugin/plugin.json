@@ -1,6 +1,6 @@
 {
   "name": "git",
-  "version": "0.2.0",
+  "version": "0.1.4",
   "description": "Create repository-aware commits and perform guarded Git maintenance workflows.",
   "author": {
     "name": "X7 Team"

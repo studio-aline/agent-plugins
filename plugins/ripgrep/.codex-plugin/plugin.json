@@ -1,5 +1,5 @@
 {
-  "name": "ripgrep", "version": "0.1.0", "description": "Search repositories quickly and safely with structured ripgrep workflows.",
+  "name": "ripgrep", "version": "0.1.2", "description": "Search repositories quickly and safely with structured ripgrep workflows.",
   "author": { "name": "X7 Team" }, "license": "UNLICENSED", "keywords": ["ripgrep", "search", "code-search", "repository"], "skills": "./skills/",
   "interface": { "displayName": "X7 Ripgrep", "shortDescription": "Safe, focused repository search", "longDescription": "Search file names and contents with narrow ripgrep queries and concise path:line results.", "developerName": "X7 Team", "category": "Developer Tools", "capabilities": ["Read"], "defaultPrompt": ["Use $search to find references to this symbol."] }
 }

@@ -1,6 +1,6 @@
 {
   "name": "ripgrep",
-  "version": "0.1.0",
+  "version": "0.1.2",
   "description": "Search repositories quickly and safely with structured ripgrep workflows.",
   "author": {
     "name": "X7 Team"

@@ -1,5 +1,5 @@
 {
-  "name": "internal-web", "version": "0.1.0", "description": "Read allowlisted private X7 pages with connected GitLab/Jenkins MCP, the host's built-in browser, or guarded local fallbacks.",
+  "name": "internal-web", "version": "0.1.5", "description": "Read allowlisted private X7 pages with connected GitLab/Jenkins MCP, the host's built-in browser, or guarded local fallbacks.",
   "author": { "name": "X7 Team" }, "license": "UNLICENSED", "keywords": ["intranet", "xlgames", "http"], "skills": "./skills/",
   "mcpServers": { "x7-internal-browser": { "command": "node", "args": ["./servers/browser-mcp-server.mjs"], "cwd": "." } },
   "interface": { "displayName": "X7 Internal Web", "shortDescription": "Safely read X7 intranet pages", "longDescription": "Read allowlisted xlgames.com and xlgames.corp pages through connected GitLab/Jenkins MCP, the host's built-in browser, or guarded local fallbacks.", "developerName": "X7 Team", "category": "Developer Tools", "capabilities": ["Read"], "defaultPrompt": ["Use $read to read this internal X7 URL, preferring GitLab/Jenkins MCP and the app's built-in browser."] }

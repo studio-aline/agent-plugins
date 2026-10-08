@@ -54,6 +54,23 @@ Antigravity unless the user explicitly limits the request to specific hosts.
    instead of silently publishing a broken entry.
 10. Update README plugin and invocation lists when user-facing behavior changes.
 
+## Plugin versioning
+
+Every change under `plugins/<plugin>/` (skill, script, reference, asset, hook,
+MCP configuration, README, or manifest) must bump that plugin's version in the
+same change.
+
+1. Use plain `MAJOR.MINOR.PATCH` semver with no build metadata (no `+...`).
+   A new plugin starts at `0.1.0`; each later modification increments PATCH by
+   one, so the version equals `0.1.<commits touching plugins/<plugin>/ - 1>`.
+   Raise MINOR or MAJOR only when the user explicitly asks.
+2. Update `version` in both `plugins/<plugin>/.claude-plugin/plugin.json` and
+   `plugins/<plugin>/.codex-plugin/plugin.json` (when present) and keep them
+   identical. Update any test that asserts the old version.
+3. Bump once per commit, only for plugins whose `plugins/<plugin>/` files
+   changed. Generated `.agents/plugins/` copies carry no version; never bump for
+   them alone.
+
 ## Root-agent-only Advisor
 
 The `advisor` skill is a root-agent-only preflight consultation. A subagent,
@@ -69,10 +86,11 @@ Before finishing a skill change:
    and Codex manifests, generated Antigravity packages, portable skill
    frontmatter, Codex metadata, Antigravity GUI workflow wrappers, and safety
    rules.
-2. Run `npm test`, `npm run validate:codex`, and
+2. Confirm each modified plugin's version was bumped in both manifests.
+3. Run `npm test`, `npm run validate:codex`, and
    `npm run validate:antigravity`.
-3. Run `git diff --check`.
-4. If the relevant host validator is installed, also run
+4. Run `git diff --check`.
+5. If the relevant host validator is installed, also run
    `claude plugin validate .` and the Codex plugin/skill validators. Report a
    missing validator or dependency; do not claim it passed.
 

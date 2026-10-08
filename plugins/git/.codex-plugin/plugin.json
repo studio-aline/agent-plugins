@@ -1,5 +1,5 @@
 {
-  "name": "git", "version": "0.2.0", "description": "Create repository-aware commits and perform guarded Git maintenance workflows.",
+  "name": "git", "version": "0.1.4", "description": "Create repository-aware commits and perform guarded Git maintenance workflows.",
   "author": { "name": "X7 Team" }, "license": "UNLICENSED", "keywords": ["git", "commit", "rebase", "conflicts"], "skills": "./skills/",
   "interface": { "displayName": "X7 Git", "shortDescription": "Repository-aware Git workflows", "longDescription": "Create commits using the applicable remote convention or safely rebase a clean feature branch onto local master.", "developerName": "X7 Team", "category": "Developer Tools", "capabilities": ["Write"], "defaultPrompt": ["Use $commit to commit the requested changes with the applicable repository convention.", "Use $rebase-master to rebase this branch."] }
 }

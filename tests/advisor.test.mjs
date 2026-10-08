@@ -42,7 +42,7 @@ test("Advisor metadata and manifests describe the same read-only skill", () => {
   const openai = fs.readFileSync(path.join(plugin, "skills", "advisor", "agents", "openai.yaml"), "utf8");
 
   assert.equal(codexManifest.name, "advisor");
-  assert.equal(codexManifest.version, "0.1.0");
+  assert.equal(codexManifest.version, "0.1.1");
   assert.equal(codexManifest.skills, "./skills/");
   assert.deepEqual(codexManifest.interface.capabilities, ["Read"]);
   assert.equal(claudeManifest.name, "advisor");
