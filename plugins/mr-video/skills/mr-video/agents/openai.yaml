@@ -1,0 +1,6 @@
+interface:
+  display_name: "MR 설명 영상"
+  short_description: "MR 변경을 자막 영상으로 만들어 MR 본문 맨 위에 넣기"
+  default_prompt: "Use $mr-video to render a subtitled explainer video of this GitLab MR and embed it in the MR description."
+policy:
+  allow_implicit_invocation: false

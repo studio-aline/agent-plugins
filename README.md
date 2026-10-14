@@ -4,7 +4,7 @@ This repository provides the X7 team's Claude Code and Codex plugin marketplaces
 and Antigravity packages. It contains independently installable plugins for
 shared Claude guidance and optional OpenAI Codex routing, safe repository
 search, X7-formatted commits, guarded Git maintenance, private intranet access,
-and VibeUE Unreal Engine MCP workflows. Additional X7 plugins
+VibeUE Unreal Engine MCP workflows, and subtitled GitLab MR explainer videos. Additional X7 plugins
 can be added under `plugins/` without changing the marketplace identity.
 
 Repository:
@@ -87,6 +87,24 @@ and command namespaces, such as `guidance`, `/codex:*`, and `/git:*`.
   default) through `mcp-remote`. Refuses to fall back to manual `.uasset`
   binary inspection when the MCP tools are unavailable.
 
+### `mr-video`
+
+- `/mr-video:mr-video` — render a subtitle-only explainer video of the author's
+  own GitLab MR change and embed it at the top of the MR description. Runs only
+  when explicitly requested.
+- Uses the MR description as primary material: mermaid diagrams (with
+  per-caption node emphasis), before/after code, comparison tables, terminal
+  commands, and test results.
+- Checks every code scene against the real base/head commits, QA's the encoded
+  MP4, changes the MR only after a successful upload, replaces only its marker
+  block, and verifies the saved description byte for byte.
+- Saves the description through a GitLab MCP when the host has one (Claude
+  Code) and through the GitLab API otherwise (Codex).
+- Windows only. Installs its own npm dependencies (Revideo, mermaid, headless
+  Chromium) under `plugins/mr-video/scripts/` on first use.
+
+![mr-video example output](docs/media/mr-video/demo.gif)
+
 ## Prerequisites
 
 - Claude Code 2.1.128 or newer.
@@ -101,6 +119,8 @@ and command namespaces, such as `guidance`, `/codex:*`, and `/git:*`.
 - `npx` on `PATH` and a running Unreal Editor with the VibeUE plugin loaded
   for the `vibeue` plugin. Its MCP server defaults to port `8088`; override
   with `VIBEUE_MCP_PORT` if the project's VibeUE proxy uses a different port.
+- Windows, Node.js with npm, and Git on `PATH` for the `mr-video` plugin, plus
+  `GITLAB_HOST` and `GITLAB_TOKEN` (a PAT with `api` scope) set for uploads.
 
 For Claude Code Codex delegation, install OpenAI's [Codex plugin for Claude
 Code](https://github.com/openai/codex-plugin-cc) separately. X7's routing and
@@ -121,6 +141,7 @@ Run the following commands in Claude Code:
 /plugin install git@x7
 /plugin install internal-web@x7
 /plugin install vibeue@x7
+/plugin install mr-video@x7
 /reload-plugins
 ```
 
@@ -145,6 +166,7 @@ Invoke the installed skills as follows:
 /internal-web:read https://x7jenkins.xlgames.com/job/example/api/json summarize the build status
 /vibeue:umg-inspect-bind Get full hierarchy of QuestViewBP and expand all BP references
 /vibeue:umg-mvvm-binding Register GameHUDViewModel as HudVM and bind HealthPercent to HealthBar.Percent
+/mr-video:mr-video MR에 설명 영상 넣어줘 https://<GitLab 호스트>/group/project/-/merge_requests/1234
 ```
 
 OpenAI's `/codex:rescue`, `/codex:review`, and `/codex:adversarial-review`
@@ -153,8 +175,8 @@ X7 `codex-routing` extension remains inactive otherwise.
 
 ### Codex
 
-The `advisor`, `ripgrep`, `git`, `internal-web`, and `vibeue` plugins are also
-packaged for Codex. The Claude `guidance` plugin is omitted from the Codex
+The `advisor`, `ripgrep`, `git`, `internal-web`, `vibeue`, and `mr-video`
+plugins are also packaged for Codex. The Claude `guidance` plugin is omitted from the Codex
 marketplace because its session hooks and optional OpenAI plugin integration
 target Claude Code.
 
@@ -168,12 +190,14 @@ codex plugin add ripgrep@x7
 codex plugin add git@x7
 codex plugin add internal-web@x7
 codex plugin add vibeue@x7
+codex plugin add mr-video@x7
 codex plugin list
 ```
 
 Restart Codex after installation so the newly installed skills are loaded.
 Invoke the installed Codex skills as `$advisor`, `$search`, `$commit`,
-`$rebase-master`, `$read`, `$umg-inspect-bind`, and `$umg-mvvm-binding`. Use
+`$rebase-master`, `$read`, `$umg-inspect-bind`, `$umg-mvvm-binding`, and
+`$mr-video`. Use
 `$advisor` when an explicit Astra review is needed.
 
 ### Antigravity
@@ -194,6 +218,9 @@ cloned. The `antigravity-guidance` plugin supplies an Antigravity-specific
 but reports that no Astra adapter is available on this host, while `ripgrep`,
 `git`, `internal-web`, and `vibeue`
 expose the same shared skills as Claude Code and Codex.
+
+`mr-video` is not packaged for Antigravity: it is published for Claude Code and
+Codex only, by request, and has no Antigravity package or Workflow wrapper.
 
 Use `/skills` in Antigravity CLI to confirm that the skills are loaded. In
 Antigravity GUI, confirm that `/model-routing`, `/advisor`, `/search`, `/commit`,
@@ -224,6 +251,7 @@ claude plugin update ripgrep@x7
 claude plugin update git@x7
 claude plugin update internal-web@x7
 claude plugin update vibeue@x7
+claude plugin update mr-video@x7
 ```
 
 Restart Claude Code after the updates are complete. Update the separately
@@ -268,6 +296,7 @@ claude --plugin-dir .\plugins\ripgrep
 claude --plugin-dir .\plugins\git
 claude --plugin-dir .\plugins\internal-web
 claude --plugin-dir .\plugins\vibeue
+claude --plugin-dir .\plugins\mr-video
 ```
 
 On macOS or Linux, use:
@@ -279,6 +308,7 @@ claude --plugin-dir ./plugins/ripgrep
 claude --plugin-dir ./plugins/git
 claude --plugin-dir ./plugins/internal-web
 claude --plugin-dir ./plugins/vibeue
+claude --plugin-dir ./plugins/mr-video
 ```
 
 ## Team distribution
@@ -303,7 +333,8 @@ add the marketplace and desired plugins to the consuming repository's
     "ripgrep@x7": true,
     "git@x7": true,
     "internal-web@x7": true,
-    "vibeue@x7": true
+    "vibeue@x7": true,
+    "mr-video@x7": true
   }
 }
 ```
@@ -320,4 +351,7 @@ npm run validate:codex
 claude plugin validate .
 ```
 
-The plugins have no npm runtime dependencies.
+Apart from `mr-video`, the plugins have no npm runtime dependencies. `mr-video`
+installs its own into `plugins/mr-video/scripts/` on first use (`node
+plugins/mr-video/scripts/bin/setup.mjs`); see `plugins/mr-video/README.md` for its
+own tests.
