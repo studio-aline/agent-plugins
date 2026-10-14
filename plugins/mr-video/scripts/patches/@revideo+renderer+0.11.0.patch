@@ -1,0 +1,15 @@
+diff --git a/node_modules/@revideo/renderer/lib/server/render-video.js b/node_modules/@revideo/renderer/lib/server/render-video.js
+index 40cc5c1..e27cacd 100644
+--- a/node_modules/@revideo/renderer/lib/server/render-video.js
++++ b/node_modules/@revideo/renderer/lib/server/render-video.js
+@@ -62,9 +62,7 @@ function buildUrl(port, fileName, workerId, totalNumOfWorkers, hiddenFolderId) {
+  */
+ async function initBrowserAndServer(fixedPort, projectFile, outputFolderName, settings, variables) {
+     const args = settings.puppeteer?.args ?? [];
+-    if (!args.includes('--single-process')) {
+-        args.push('--single-process');
+-    }
++    // mr-video patch: --single-process crashes Chromium on Windows.
+     const resolvedProjectPath = path.join(process.cwd(), projectFile);
+     const [browser, server] = await Promise.all([
+         puppeteer_1.default.launch({ headless: true, ...settings.puppeteer, args }),

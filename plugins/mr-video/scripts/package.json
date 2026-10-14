@@ -1,0 +1,37 @@
+{
+  "name": "mr-video",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Render a subtitled explainer video for a GitLab MR and embed it in the MR description",
+  "type": "module",
+  "bin": {
+    "mr-video": "bin/mr-video.mjs"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run --exclude test/render.test.ts",
+    "test:render": "vitest run test/render.test.ts",
+    "postinstall": "patch-package"
+  },
+  "dependencies": {
+    "@ffmpeg-installer/ffmpeg": "1.1.0",
+    "@ffprobe-installer/ffprobe": "2.1.2",
+    "@lezer/cpp": "1.1.6",
+    "@revideo/2d": "0.11.0",
+    "@revideo/core": "0.11.0",
+    "@revideo/renderer": "0.11.0",
+    "@revideo/ui": "0.11.0",
+    "@revideo/vite-plugin": "0.11.0",
+    "lezer-elixir": "1.1.3",
+    "mermaid": "12.2.0",
+    "puppeteer": "25.13.0",
+    "tsx": "4.23.15",
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "@types/node": "26.6.5",
+    "patch-package": "8.0.1",
+    "typescript": "7.0.2",
+    "vitest": "5.0.4"
+  }
+}
