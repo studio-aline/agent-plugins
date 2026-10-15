@@ -1,8 +1,8 @@
 {
-  "name": "x7",
-  "description": "X7 team marketplace for reusable Claude Code plugins.",
+  "name": "agent-plugins",
+  "description": "Studio Aline marketplace of reusable agent plugins for Claude Code, Codex, and Antigravity.",
   "owner": {
-    "name": "X7 Team"
+    "name": "Studio Aline"
   },
   "plugins": [
     {

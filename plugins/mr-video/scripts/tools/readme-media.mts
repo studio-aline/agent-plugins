@@ -39,7 +39,7 @@ function introPlan(): Plan {
       {
         type: 'title',
         title: 'mr-video — MR에 설명 영상을',
-        meta: 'mr-video@x7 · Claude Code · Codex',
+        meta: 'mr-video@agent-plugins · Claude Code · Codex',
         summary: 'Claude Code나 Codex에게 "MR에 설명 영상 넣어줘"라고 하면 자막 영상을 만들어 MR 본문 맨 위에 넣습니다',
         captions: ['mr-video는 MR의 변경 내용을 자막 영상으로 만듭니다.', '만든 영상은 MR 본문 맨 위에 바로 들어갑니다.'],
       },
@@ -88,9 +88,9 @@ function introPlan(): Plan {
         prompt: '>',
         lines: [
           {cmd: '/plugin marketplace add studio-aline/x7-claude-plugins'},
-          {cmd: '/plugin install mr-video@x7'},
+          {cmd: '/plugin install mr-video@agent-plugins'},
           {cmd: 'codex plugin marketplace add studio-aline/x7-claude-plugins'},
-          {cmd: 'codex plugin add mr-video@x7'},
+          {cmd: 'codex plugin add mr-video@agent-plugins'},
           {cmd: 'setx GITLAB_HOST "<GitLab 호스트>"', out: '성공: 지정한 값을 저장했습니다.'},
           {cmd: 'setx GITLAB_TOKEN "<api 스코프 PAT>"', out: '성공: 지정한 값을 저장했습니다.'},
         ],

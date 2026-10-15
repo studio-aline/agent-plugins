@@ -31,7 +31,7 @@ Antigravity unless the user explicitly limits the request to specific hosts.
 5. Register a new plugin in both marketplaces:
    - Claude Code: `.claude-plugin/marketplace.json`
    - Codex: `.agents/plugins/marketplace.json`
-   Use marketplace name `x7` and source `./plugins/<plugin>`. Codex entries must
+   Use marketplace name `agent-plugins` and source `./plugins/<plugin>`. Codex entries must
    include `policy.installation`, `policy.authentication`, and `category`.
    A skill added to an already registered plugin needs no marketplace entry.
 6. Package supported plugins for Antigravity under

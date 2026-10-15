@@ -1,6 +1,6 @@
 {
   "name": "guidance",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "description": "Inject shared Claude model-selection guidance and optional routing for OpenAI's Codex plugin.",
   "author": {
     "name": "X7 Team"
