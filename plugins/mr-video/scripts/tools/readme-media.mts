@@ -87,9 +87,9 @@ function introPlan(): Plan {
         title: '설치 (Windows)',
         prompt: '>',
         lines: [
-          {cmd: '/plugin marketplace add xlgames-navi/x7-claude-plugins'},
+          {cmd: '/plugin marketplace add studio-aline/x7-claude-plugins'},
           {cmd: '/plugin install mr-video@x7'},
-          {cmd: 'codex plugin marketplace add xlgames-navi/x7-claude-plugins'},
+          {cmd: 'codex plugin marketplace add studio-aline/x7-claude-plugins'},
           {cmd: 'codex plugin add mr-video@x7'},
           {cmd: 'setx GITLAB_HOST "<GitLab 호스트>"', out: '성공: 지정한 값을 저장했습니다.'},
           {cmd: 'setx GITLAB_TOKEN "<api 스코프 PAT>"', out: '성공: 지정한 값을 저장했습니다.'},

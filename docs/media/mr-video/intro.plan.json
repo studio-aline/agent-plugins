@@ -1,9 +1,9 @@
 {
   "mr": {
     "project": "x7-claude-plugins",
-    "branch": "feat/mr-video-plugin",
+    "branch": "docs/studio-aline-org",
     "base": "9260ca2736f9440998ba665e2d96eb74e438d9b9",
-    "head": "30a84c122036aec03e3b00acfb7195ad5b3717a3"
+    "head": "21bf77775b94b795d8d66bdb52d3e6b941bc0a34"
   },
   "title": "mr-video 소개",
   "scenes": [
@@ -123,13 +123,13 @@
       "prompt": ">",
       "lines": [
         {
-          "cmd": "/plugin marketplace add xlgames-navi/x7-claude-plugins"
+          "cmd": "/plugin marketplace add studio-aline/x7-claude-plugins"
         },
         {
           "cmd": "/plugin install mr-video@x7"
         },
         {
-          "cmd": "codex plugin marketplace add xlgames-navi/x7-claude-plugins"
+          "cmd": "codex plugin marketplace add studio-aline/x7-claude-plugins"
         },
         {
           "cmd": "codex plugin add mr-video@x7"
