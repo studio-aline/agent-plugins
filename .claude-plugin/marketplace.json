@@ -2,7 +2,7 @@
   "name": "agent-plugins",
   "description": "Studio Aline marketplace of reusable agent plugins for Claude Code, Codex, and Antigravity.",
   "owner": {
-    "name": "Studio Aline"
+    "name": "Aline Studio"
   },
   "plugins": [
     {
