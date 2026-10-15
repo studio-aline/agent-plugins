@@ -166,3 +166,43 @@ describe('before steps', () => {
     }
   });
 });
+
+describe('login session', () => {
+  it('treats closing the last window as done', {timeout: 60_000}, async () => {
+    const {openLoginWindow} = await import('../src/record/record.ts');
+    const dir = mkdtempSync(join(tmpdir(), 'mr-video-login-close-'));
+    // The page closes itself the way a user closes the window; the browser process stays up.
+    const r = await openLoginWindow('http://127.0.0.1:9/', {profileDir: join(dir, 'profile'), headless: true, minutes: 0.5,
+      drive: async p => { await p.close(); await new Promise(res => setTimeout(res, 1500)); }});
+    expect(r.closedBy).toBe('user');
+  });
+
+  it('keeps a session-cookie sign-in from the login window for record', {timeout: 120_000}, async () => {
+    const {openLoginWindow, recordSteps} = await import('../src/record/record.ts');
+    // Signing in sets a session cookie (no expiry); pages without it show "signed out".
+    const server = createServer((req, res) => {
+      if (req.url === '/login') {
+        res.writeHead(200, {'set-cookie': 'sid=ok; Path=/; HttpOnly', 'content-type': 'text/html'});
+        return res.end('<p>signed in</p>');
+      }
+      const ok = /(?:^|; )sid=ok/.test(req.headers.cookie ?? '');
+      res.writeHead(200, {'content-type': 'text/html'});
+      res.end(ok ? '<p id="me">admin</p>' : '<p>signed out</p>');
+    });
+    await new Promise<void>(r => server.listen(0, '127.0.0.1', r));
+    const a = server.address();
+    const origin = a && typeof a === 'object' ? `http://127.0.0.1:${a.port}` : '';
+    const dir = mkdtempSync(join(tmpdir(), 'mr-video-login-'));
+    try {
+      const login = await openLoginWindow(`${origin}/login`, {profileDir: join(dir, 'profile'), headless: true, drive: async () => {}});
+      expect(login.closedBy).toBe('user');
+      expect(login.cookies).toBe(1);
+      const r = await recordSteps(parseSteps({url: `${origin}/`, steps: [{action: 'wait', selector: '#me', timeoutMs: 3000}]}),
+        join(dir, 'c.mp4'), {profileDir: join(dir, 'profile')});
+      expect(r.error).toBeUndefined();
+      expect(r.ok).toBe(true);
+    } finally {
+      server.close();
+    }
+  });
+});

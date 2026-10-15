@@ -1,5 +1,5 @@
 {
-  "name": "mr-video", "version": "0.1.6", "description": "Render a subtitled explainer video of a GitLab MR change and embed it at the top of the MR description.",
+  "name": "mr-video", "version": "0.1.7", "description": "Render a subtitled explainer video of a GitLab MR change and embed it at the top of the MR description.",
   "author": { "name": "X7 Team" }, "license": "UNLICENSED", "keywords": ["gitlab", "merge-request", "video", "review"], "skills": "./skills/",
   "interface": { "displayName": "MR Video", "shortDescription": "Explain an MR with a subtitled video", "longDescription": "Render a subtitle-only explainer video of the author's GitLab MR change (diagrams, before/after code, comparison tables), upload it, and embed it at the top of the MR description without touching the rest of the text. Windows only.", "developerName": "X7 Team", "category": "Developer Tools", "capabilities": ["Read", "Write"], "defaultPrompt": ["Use $mr-video to render a subtitled explainer video of this GitLab MR and embed it in the MR description."] }
 }

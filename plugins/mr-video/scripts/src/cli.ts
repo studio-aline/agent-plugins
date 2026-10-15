@@ -171,9 +171,10 @@ async function main(argv: string[]): Promise<number> {
     case 'login-window': {
       if (!o.url) throw new Error('--url 이 필요합니다');
       const {openLoginWindow} = await import('./record/record.ts');
-      const how = await openLoginWindow(o.url);
-      print({ok: true, closedBy: how === 'closed' ? 'user' : 'timeout'});
-      return 0;
+      const r = await openLoginWindow(o.url);
+      // cookies: how many local-app cookies were saved for record (0 means the sign-in was not kept)
+      print({ok: r.cookies > 0, ...r});
+      return r.cookies > 0 ? 0 : 1;
     }
 
     case 'upload': {

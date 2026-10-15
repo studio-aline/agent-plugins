@@ -74,5 +74,7 @@ npx tsx tools\readme-media.mts     # README 영상·GIF 다시 만들기 (docs/m
 - 업로드한 영상 URL은 브라우저 로그인 세션으로만 열린다.
 - 녹화용 브라우저 프로필은 `%LOCALAPPDATA%\mr-video\browser-profile`에 있다. `login-window` 창이 열려 있는 동안에는
   `record`가 같은 프로필을 쓸 수 없다(창은 사용자가 닫거나 9분이 지나면 닫힌다).
+- `login-window`는 사용자가 직접 연 터미널에서 실행한다(에이전트가 띄운 창은 화면에 안 보일 수 있다). 창이 열려 있는 동안
+  로컬 앱 쿠키(닫으면 사라지는 세션 쿠키 포함)를 프로필 폴더의 `mr-video-session.json`에 저장하고 `record`가 다시 넣는다.
 - 녹화 중에는 팝업·새 탭을 막고, 어느 프레임이든 localhost 밖 문서로 이동하면 녹화를 중단한다.
 - 화면 녹화(screencast)는 화면이 바뀔 때만 프레임을 받으므로, 페이지에 보이지 않는 1px 요소를 매 프레임 바꿔 마지막 화면까지 녹화한다.

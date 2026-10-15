@@ -2,10 +2,10 @@
 // Uses mr-video's own Chromium and its own persistent profile, so it behaves the same under any
 // agent host and never touches the user's personal browser profile.
 import {execFileSync} from 'node:child_process';
-import {mkdirSync, rmSync} from 'node:fs';
+import {existsSync, mkdirSync, readFileSync, rmSync, writeFileSync} from 'node:fs';
 import {homedir} from 'node:os';
 import {dirname, join, resolve} from 'node:path';
-import puppeteer, {type Page} from 'puppeteer';
+import puppeteer, {type Browser, type Page} from 'puppeteer';
 import {FFMPEG, FFPROBE} from '../media.ts';
 import {isLocalUrl, type RecordStep, type Steps} from './steps.ts';
 
@@ -100,6 +100,45 @@ function probe(file: string): {seconds: number; width: number; height: number} {
   return {seconds: Number(out.format.duration), width: out.streams[0].width, height: out.streams[0].height};
 }
 
+// Sign-in cookies of local apps, kept beside the profile. Many apps use session cookies (no expiry),
+// which the browser drops when the login window closes, so they are saved here and restored on record.
+const SESSION_FILE = 'mr-video-session.json';
+
+interface SavedCookie {
+  name: string;
+  value: string;
+  domain: string;
+  path: string;
+  secure: boolean;
+  httpOnly: boolean;
+  sameSite?: string;
+  expires?: number;
+}
+
+const isLocalCookie = (c: {domain: string}) => {
+  const host = c.domain.replace(/^\./, '').toLowerCase();
+  return host === 'localhost' || host.endsWith('.localhost') || host === '127.0.0.1' || host === '[::1]' || host === '::1';
+};
+
+async function localCookies(browser: Browser): Promise<SavedCookie[]> {
+  const cdp = await browser.target().createCDPSession();
+  const {cookies} = (await cdp.send('Storage.getCookies')) as {cookies: (SavedCookie & {session: boolean})[]};
+  return cookies.filter(isLocalCookie).map(c => ({
+    name: c.name, value: c.value, domain: c.domain, path: c.path, secure: c.secure, httpOnly: c.httpOnly,
+    ...(c.sameSite ? {sameSite: c.sameSite} : {}),
+    ...(c.session ? {} : {expires: c.expires}),
+  }));
+}
+
+async function restoreSession(browser: Browser, profileDir: string): Promise<void> {
+  const file = join(profileDir, SESSION_FILE);
+  if (!existsSync(file)) return;
+  const cookies = (JSON.parse(readFileSync(file, 'utf8')) as SavedCookie[]).filter(isLocalCookie);
+  if (!cookies.length) return;
+  const cdp = await browser.target().createCDPSession();
+  await cdp.send('Storage.setCookies', {cookies} as never);
+}
+
 /** Subframes may also hold documents that never touch the network. */
 const isInertUrl = (raw: string) => /^(about|blob|data):/i.test(raw);
 
@@ -113,10 +152,11 @@ export async function recordSteps(s: Steps, outFile: string, opts: {profileDir?:
   const fail = (where: string, why: string) => `${where} ${why}`;
   const leftLocal = (where: string) => `${where}에서 localhost 밖으로 이동하려 해서 중단했습니다: ${blocked}`;
 
+  const profileDir = opts.profileDir ?? defaultProfileDir();
   try {
     const browser = await puppeteer.launch({
       headless: true,
-      userDataDir: opts.profileDir ?? defaultProfileDir(),
+      userDataDir: profileDir,
       defaultViewport: VIEWPORT,
       args: [`--window-size=${VIEWPORT.width},${VIEWPORT.height}`],
     });
@@ -135,6 +175,7 @@ export async function recordSteps(s: Steps, outFile: string, opts: {profileDir?:
         void cdp.send('Fetch.failRequest', {requestId: e.requestId, errorReason: 'BlockedByClient'}).catch(() => undefined);
       });
       await cdp.send('Fetch.enable', {patterns: [{urlPattern: '*', resourceType: 'Document', requestStage: 'Request'}]});
+      await restoreSession(browser, profileDir);
       // Recordings show one tab; a popup (even a local one) means the script is off track.
       browser.on('targetcreated', t => {
         if (t.type() !== 'page' || t === page.target()) return;
@@ -197,29 +238,67 @@ export async function recordSteps(s: Steps, outFile: string, opts: {profileDir?:
 /** Closes the login window on its own before an agent host's 10-minute command timeout would kill us. */
 export const LOGIN_WINDOW_MINUTES = 9;
 
+export interface LoginWindowOptions {
+  profileDir?: string;
+  minutes?: number;
+  /** Tests only: run without a visible window and drive the page instead of a person. */
+  headless?: boolean;
+  drive?: (page: Page) => Promise<void>;
+}
+
 /**
  * Opens a visible window on the shared profile so the user can sign in to their local app
  * themselves. Resolves when the user closes the window, or after `minutes` (the window is then
- * closed so no orphaned browser keeps the profile locked).
+ * closed so no orphaned browser keeps the profile locked). The local app's cookies, including
+ * session cookies the browser would forget, are saved for `record`.
  */
-export async function openLoginWindow(url: string, opts: {profileDir?: string; minutes?: number} = {}): Promise<'closed' | 'timeout'> {
+export async function openLoginWindow(url: string, opts: LoginWindowOptions = {}): Promise<{closedBy: 'user' | 'timeout'; cookies: number}> {
   if (!isLocalUrl(url)) throw new Error('localhost(127.0.0.1, ::1, *.localhost) 주소만 열 수 있습니다');
+  const profileDir = opts.profileDir ?? defaultProfileDir();
   const browser = await puppeteer.launch({
-    headless: false,
-    userDataDir: opts.profileDir ?? defaultProfileDir(),
+    headless: opts.headless ?? false,
+    userDataDir: profileDir,
     defaultViewport: null,
     args: [`--window-size=${VIEWPORT.width},${VIEWPORT.height + 120}`],
   });
+  const closed = new Promise<'user'>(r => browser.once('disconnected', () => r('user')));
   const close = () => void browser.close().catch(() => undefined);
   process.once('SIGINT', close).once('SIGTERM', close).once('SIGBREAK', close);
+
+  // Cookies can no longer be read once the window is gone, so keep the latest copy while it is open.
+  let saved: SavedCookie[] = [];
+  const snapshot = async () => {
+    try {
+      saved = await localCookies(browser);
+    } catch {
+      // browser already closing
+    }
+  };
+  const poll = setInterval(() => void snapshot(), 1000);
+
+  // Closing the last window is the user saying "done", even if the browser process lingers.
+  browser.on('targetdestroyed', () => {
+    void browser.pages().then(pages => pages.length === 0 && close(), () => undefined);
+  });
+
   const page = (await browser.pages())[0] ?? (await browser.newPage());
   await page.goto(url).catch(() => undefined);
+  if (opts.drive) {
+    await opts.drive(page);
+    await snapshot();
+    close();
+  }
   let timer: NodeJS.Timeout | undefined;
   const result = await Promise.race([
-    new Promise<'closed'>(r => browser.once('disconnected', () => r('closed'))),
+    closed,
     new Promise<'timeout'>(r => { timer = setTimeout(() => r('timeout'), (opts.minutes ?? LOGIN_WINDOW_MINUTES) * 60_000); }),
   ]);
   clearTimeout(timer);
-  if (result === 'timeout') await browser.close().catch(() => undefined);
-  return result;
+  clearInterval(poll);
+  if (result === 'timeout') {
+    await snapshot();
+    await browser.close().catch(() => undefined);
+  }
+  writeFileSync(join(profileDir, SESSION_FILE), JSON.stringify(saved));
+  return {closedBy: result, cookies: saved.length};
 }
