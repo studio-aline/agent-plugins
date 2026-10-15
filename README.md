@@ -8,7 +8,7 @@ VibeUE Unreal Engine MCP workflows, and subtitled GitLab MR explainer videos. Ad
 can be added under `plugins/` without changing the marketplace identity.
 
 Repository:
-[xlgames-navi/x7-claude-plugins](https://github.com/xlgames-navi/x7-claude-plugins)
+[studio-aline/x7-claude-plugins](https://github.com/studio-aline/x7-claude-plugins)
 
 The marketplace name is `x7`. Individual plugins retain their own identifiers
 and command namespaces, such as `guidance`, `/codex:*`, and `/git:*`.
@@ -134,7 +134,7 @@ is installed and enabled.
 Run the following commands in Claude Code:
 
 ```text
-/plugin marketplace add xlgames-navi/x7-claude-plugins
+/plugin marketplace add studio-aline/x7-claude-plugins
 /plugin install guidance@x7
 /plugin install advisor@x7
 /plugin install ripgrep@x7
@@ -184,7 +184,7 @@ Install the marketplace and plugins from a terminal with a Codex CLI version
 that supports the `codex plugin` commands:
 
 ```powershell
-codex plugin marketplace add xlgames-navi/x7-claude-plugins
+codex plugin marketplace add studio-aline/x7-claude-plugins
 codex plugin add advisor@x7
 codex plugin add ripgrep@x7
 codex plugin add git@x7
@@ -206,7 +206,7 @@ Antigravity plugins in this repository are installed at workspace scope. Clone
 the repository, then open its root directory as the workspace in Antigravity:
 
 ```powershell
-git clone https://github.com/xlgames-navi/x7-claude-plugins.git
+git clone https://github.com/studio-aline/x7-claude-plugins.git
 cd x7-claude-plugins
 ```
 
@@ -288,7 +288,7 @@ completion in Antigravity GUI to confirm that the updated skills are loaded.
 Clone the repository:
 
 ```powershell
-git clone https://github.com/xlgames-navi/x7-claude-plugins.git
+git clone https://github.com/studio-aline/x7-claude-plugins.git
 cd x7-claude-plugins
 claude --plugin-dir .\plugins\guidance
 claude --plugin-dir .\plugins\advisor
@@ -313,7 +313,7 @@ claude --plugin-dir ./plugins/mr-video
 
 ## Team distribution
 
-Team members can add `xlgames-navi/x7-claude-plugins` as a marketplace and
+Team members can add `studio-aline/x7-claude-plugins` as a marketplace and
 install any plugin using the commands above. For repository-guided installation,
 add the marketplace and desired plugins to the consuming repository's
 `.claude/settings.json`:
@@ -324,7 +324,7 @@ add the marketplace and desired plugins to the consuming repository's
     "x7": {
       "source": {
         "source": "github",
-        "repo": "xlgames-navi/x7-claude-plugins"
+        "repo": "studio-aline/x7-claude-plugins"
       }
     }
   },
