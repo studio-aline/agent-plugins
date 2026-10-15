@@ -20,6 +20,7 @@ Codex(`$mr-video`)에서 "MR에 설명 영상 넣어줘"라고 하면, 변경 �
 장면 종류: `title` · `flow` · `mermaid`(노드 강조, 강조한 곳으로 화면 이동) · `code`(before → after 모핑) ·
 `table`(수정 전/후, 설계 결정 비교) · `terminal` · `tests` · `checklist` · `clip`(웹 화면 녹화).
 
+- 코드 장면 언어: C++, Elixir, C#, JavaScript, TypeScript(TSX 포함), Rust. 파일 확장자로 판단하므로 한 MR에 섞여도 된다.
 - 테마: 기본은 라이트. 요청 뒤에 `dark`를 붙이면 다크로 그린다(`/mr-video:mr-video dark`, `$mr-video dark`).
 - 음성: 요청 뒤에 `voice`를 붙이면 Windows 기본 한국어 음성(오프라인)으로 자막을 읽고, 자막은 읽기가 끝날 때까지 유지한다.
   식별자처럼 읽기 어려운 자막은 `say`로 읽을 문장을 따로 줄 수 있다.
@@ -32,7 +33,8 @@ Codex(`$mr-video`)에서 "MR에 설명 영상 넣어줘"라고 하면, 변경 �
 ## 요구 사항
 
 - Windows (맑은 고딕·Consolas 시스템 폰트), Node.js, git.
-- `GITLAB_HOST`, `GITLAB_TOKEN`(api 스코프 PAT) 환경 변수. `setx`로 등록하면 재시작 전 세션에서도 읽는다.
+- `GITLAB_HOST`, `GITLAB_TOKEN` 환경 변수. 토큰은 **개인 액세스 토큰**(`api` 권한)이어야 한다.
+  프로젝트·그룹 액세스 토큰은 봇 계정으로 동작해 업로드는 되지만 MR 본문을 고칠 수 없다(403). `setx`로 등록하면 재시작 전 세션에서도 읽는다.
 - 첫 실행 때 `scripts/bin/setup.mjs`가 `scripts/` 아래에 npm 의존성(Revideo, mermaid, Chromium 등)을 설치한다.
   플러그인을 업데이트하면 다시 설치된다.
 

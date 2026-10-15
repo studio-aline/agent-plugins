@@ -1,5 +1,6 @@
 import {Code, Rect} from '@revideo/2d';
 import {createRef} from '@revideo/core';
+import {detectLang, usesJsx} from '../../lang.ts';
 import type {CodeScene} from '../../plan.ts';
 import {literalPattern} from '../../regex.ts';
 import {highlighterFor} from '../highlight.ts';
@@ -12,7 +13,7 @@ export const buildCode: Builder<CodeScene> = (s, stage, plan) => {
   stage.add(
     <Rect ref={card} fill={COLOR.card} radius={12} padding={28} stroke={COLOR.border} lineWidth={2} layout
           y={(LAYOUT.stageTop + LAYOUT.stageBottom) / 2}>
-      <Code ref={code} highlighter={highlighterFor(plan.lang ?? 'cpp', plan.theme)} code={s.after} fill={COLOR.fg} fontFamily={FONT.mono} fontSize={24} />
+      <Code ref={code} highlighter={highlighterFor(detectLang(s.file) ?? plan.lang ?? 'cpp', plan.theme, usesJsx(s.file))} code={s.after} fill={COLOR.fg} fontFamily={FONT.mono} fontSize={24} />
     </Rect>,
   );
 
@@ -28,9 +29,13 @@ export const buildCode: Builder<CodeScene> = (s, stage, plan) => {
   );
   card().scale(fit);
 
+  // Look the range up when the beat runs, not when it is created: with fewer captions the morph to
+  // `after` is chained right before this in the same caption, and `highlight` exists only in `after`.
   const select: Beat = s.highlight === undefined
     ? idle
-    : () => code().selection(code().findFirstRange(literalPattern(s.highlight!)), 0.6);
+    : function* () {
+        yield* code().selection(code().findFirstRange(literalPattern(s.highlight!)), 0.6);
+      };
 
   if (s.before === undefined) return [idle, select];
   return [idle, () => code().code(s.after, 1.2), select];

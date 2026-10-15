@@ -21,11 +21,12 @@ MR 본문 맨 위에 넣는다. 명시적으로 요청받았을 때만 실행하
 ## 전제
 
 - Windows 전용이다(맑은 고딕·Consolas 시스템 폰트). Node.js와 git이 `PATH`에 있어야 한다.
-- 환경 변수 `GITLAB_HOST`(예: `gitlab.example.com`), `GITLAB_TOKEN`(api 스코프 PAT). CLI가 프로세스 환경 변수,
+- 환경 변수 `GITLAB_HOST`(예: `gitlab.example.com`), `GITLAB_TOKEN`(**개인** 액세스 토큰, `api` 권한. 프로젝트·그룹 액세스 토큰은 봇 계정이라 MR 본문 저장이 403으로 거부된다). CLI가 프로세스 환경 변수,
   없으면 Windows 사용자 환경 변수(`setx`로 등록한 값)에서 읽는다. 둘 다 없으면 멈추고 사용자에게 설정을 요청한다.
   토큰 값을 출력하거나 대신 입력하지 않는다.
 - MR 본문은 **읽을 때는 `MRV description`**(API로 바이트 그대로) 쓴다. 호스트의 도구 출력에서 본문을 옮겨 적지 않는다.
-- 레포는 C++ 또는 Elixir 중 하나만 다룬다.
+- `code` 장면은 C++·Elixir·C#·JavaScript·TypeScript(TSX 포함)·Rust 파일을 지원한다. 하이라이트는 파일 확장자를 따르므로
+  한 MR에 여러 언어가 섞여도 된다(`lang`은 생략 가능). 그 밖의 언어 파일은 `code` 장면 대신 `mermaid`·`table`로 설명한다.
 - 영상은 **푸시된 head 커밋** 기준이다. 커밋 안 된 변경이 있거나 푸시가 안 됐으면 먼저 사용자 요청 범위 안에서
   커밋·푸시 상태를 맞춘다(요청이 없으면 그 사실을 알리고 멈춘다).
 

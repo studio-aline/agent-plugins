@@ -15,10 +15,13 @@
   },
   "dependencies": {
     "@codemirror/language": "6.13.1",
+    "@codemirror/legacy-modes": "6.5.4",
     "@ffmpeg-installer/ffmpeg": "1.1.0",
     "@ffprobe-installer/ffprobe": "2.1.2",
     "@lezer/cpp": "1.1.6",
     "@lezer/highlight": "1.2.5",
+    "@lezer/javascript": "1.5.5",
+    "@lezer/rust": "1.0.3",
     "@revideo/2d": "0.11.0",
     "@revideo/core": "0.11.0",
     "@revideo/renderer": "0.11.0",

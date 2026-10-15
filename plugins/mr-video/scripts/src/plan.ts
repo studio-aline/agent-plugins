@@ -1,6 +1,6 @@
 import {z} from 'zod';
 import {diagramKind, hasDiagramId} from './diagram.ts';
-import {detectLang} from './lang.ts';
+import {detectLang, LANGS} from './lang.ts';
 import {planSeconds} from './timing.ts';
 
 const sha = z.string().regex(/^[0-9a-f]{7,40}$/, '7~40자리 16진수 SHA여야 합니다');
@@ -94,8 +94,8 @@ export const PlanSchema = z.object({
     })
     .refine(m => m.iid !== undefined || m.branch !== undefined, 'iid 또는 branch 중 하나는 있어야 합니다'),
   title: z.string().min(1),
-  // Needed only for code scenes (syntax highlighting and file-extension checks).
-  lang: z.enum(['cpp', 'elixir']).optional(),
+  // Optional: code scenes highlight by their file extension; this is only a hint and a fallback.
+  lang: z.enum(LANGS).optional(),
   // Video color theme; light when omitted.
   theme: z.enum(['dark', 'light']).optional(),
   // Read the captions aloud with the Windows Korean voice; the video gets an audio track.
@@ -164,8 +164,10 @@ export function checkPlan(plan: Plan): CheckResult {
       if (s.accentCol !== undefined && (s.accentCol < 0 || s.accentCol >= s.columns.length)) errors.push(`${at}: accentCol ${s.accentCol}가 범위를 벗어납니다`);
     }
     if (s.type === 'code') {
-      if (!plan.lang) errors.push(`${at}: code 장면이 있으면 lang(cpp|elixir)이 필요합니다`);
-      else if (detectLang(s.file) !== plan.lang) errors.push(`${at}: ${s.file}의 확장자가 lang(${plan.lang})과 맞지 않습니다`);
+      // The highlighter follows each file's extension, so one plan can mix languages.
+      const lang = detectLang(s.file);
+      if (!lang) errors.push(`${at}: ${s.file}은(는) 지원하지 않는 언어입니다 (${LANGS.join('|')})`);
+      else if (plan.lang && lang !== plan.lang) warnings.push(`${at}: ${s.file}은(는) ${lang}입니다. 하이라이트는 파일 확장자를 따릅니다 (lang: ${plan.lang})`);
       if (s.highlight !== undefined && !s.after.includes(s.highlight)) {
         errors.push(`${at}: highlight가 after 안에 없습니다`);
       }
