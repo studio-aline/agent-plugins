@@ -20,7 +20,7 @@ Codex(`$mr-video`)에서 "MR에 설명 영상 넣어줘"라고 하면, 변경 �
 장면 종류: `title` · `flow` · `mermaid`(노드 강조, 강조한 곳으로 화면 이동) · `code`(before → after 모핑) ·
 `table`(수정 전/후, 설계 결정 비교) · `terminal` · `tests` · `checklist`.
 
-- 테마: plan의 `theme`로 `dark`(기본)·`light`를 고른다.
+- 테마: 기본은 라이트. 요청 뒤에 `dark`를 붙이면 다크로 그린다(`/mr-video:mr-video dark`, `$mr-video dark`).
 - 구조·흐름이 바뀐 MR은 mermaid 다이어그램을 적극적으로 쓴다(본문에 없으면 코드에서 직접 그림).
 - `.uasset`·`.umap`이 바뀌면 VibeUE로 블루프린트·위젯을 읽어 변경 전/후를 mermaid로 비교한다.
   에디터가 꺼져 있거나 비교할 수 없으면 그 사실을 영상에 밝힌다.

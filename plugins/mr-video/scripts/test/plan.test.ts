@@ -224,7 +224,7 @@ describe('title meta', () => {
 });
 
 describe('theme', () => {
-  it('defaults to dark and accepts light', async () => {
+  it('defaults to light and accepts dark', async () => {
     const {PALETTES, paletteFor} = await import('../src/render/theme.ts');
     expect(parsePlan(samplePlan()).theme).toBeUndefined();
     const p: any = samplePlan();
@@ -232,7 +232,8 @@ describe('theme', () => {
     expect(parsePlan(p).theme).toBe('light');
     p.theme = 'sepia';
     expect(() => parsePlan(p)).toThrow();
-    expect(paletteFor(undefined)).toBe(PALETTES.dark);
+    expect(paletteFor(undefined)).toBe(PALETTES.light);
+    expect(paletteFor('dark')).toBe(PALETTES.dark);
     expect(paletteFor('light')).toBe(PALETTES.light);
   });
 

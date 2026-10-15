@@ -52,13 +52,15 @@ export const PALETTES: Record<ThemeName, Palette> = {
   },
 };
 
-export const paletteFor = (theme: ThemeName | undefined): Palette => PALETTES[theme ?? 'dark'];
+export const DEFAULT_THEME: ThemeName = 'light';
+
+export const paletteFor = (theme: ThemeName | undefined): Palette => PALETTES[theme ?? DEFAULT_THEME];
 
 /**
  * The active palette. Scene builders read it while building, so the scene applies the plan's
  * theme once before building anything.
  */
-export const COLOR: Palette = {...PALETTES.dark};
+export const COLOR: Palette = {...PALETTES[DEFAULT_THEME]};
 
 export function applyTheme(theme: ThemeName | undefined): void {
   Object.assign(COLOR, paletteFor(theme));

@@ -105,7 +105,7 @@ export async function renderDiagrams(jobs: DiagramJob[], theme?: ThemeName): Pro
       `<html><body style="margin:0;background:${p.bg}"><div id="c" style="display:inline-block;padding:12px;background:${p.bg}"></div></body></html>`,
     );
     await page.addScriptTag({path: require.resolve('mermaid/dist/mermaid.min.js')});
-    await page.evaluate(cfg => (globalThis as any).mermaid.initialize(cfg), mermaidConfig(p, (theme ?? 'dark') === 'dark'));
+    await page.evaluate(cfg => (globalThis as any).mermaid.initialize(cfg), mermaidConfig(p, p === PALETTES.dark));
 
     const out: DiagramFrames[] = [];
     for (const [i, job] of jobs.entries()) {

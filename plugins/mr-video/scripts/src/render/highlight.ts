@@ -3,7 +3,7 @@ import {tags as t} from '@lezer/highlight';
 import {DefaultHighlightStyle, LezerHighlighter} from '@revideo/2d';
 import {parser as cppParser} from '@lezer/cpp';
 import {parser as elixirParser} from 'lezer-elixir';
-import type {ThemeName} from './theme.ts';
+import {DEFAULT_THEME, type ThemeName} from './theme.ts';
 
 // Readable on a white card; colors in the spirit of common light editor themes.
 const LightHighlightStyle = HighlightStyle.define([
@@ -25,7 +25,8 @@ const STYLES = {dark: DefaultHighlightStyle, light: LightHighlightStyle};
 const cache = new Map<string, LezerHighlighter>();
 
 export function highlighterFor(lang: keyof typeof PARSERS, theme: ThemeName | undefined): LezerHighlighter {
-  const key = `${lang}:${theme ?? 'dark'}`;
-  if (!cache.has(key)) cache.set(key, new LezerHighlighter(PARSERS[lang], STYLES[theme ?? 'dark']));
+  const t = theme ?? DEFAULT_THEME;
+  const key = `${lang}:${t}`;
+  if (!cache.has(key)) cache.set(key, new LezerHighlighter(PARSERS[lang], STYLES[t]));
   return cache.get(key)!;
 }

@@ -34,6 +34,7 @@ describe('beats beyond the last caption', () => {
     const raw = samplePlan();
     const tests = raw.scenes.find(s => s.type === 'tests')!;
     tests.captions = ['테스트 결과입니다.'];
+    (raw as any).theme = 'dark'; // the luma probe below assumes light cards on a dark background
     raw.scenes = raw.scenes.filter(s => s.type !== 'code');
     const plan = parsePlan(raw);
     const r = await renderPlan(plan, join(out, 'one-caption.mp4'));

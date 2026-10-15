@@ -77,7 +77,7 @@ export const PlanSchema = z.object({
   title: z.string().min(1),
   // Needed only for code scenes (syntax highlighting and file-extension checks).
   lang: z.enum(['cpp', 'elixir']).optional(),
-  // Video color theme; dark when omitted.
+  // Video color theme; light when omitted.
   theme: z.enum(['dark', 'light']).optional(),
   scenes: z.array(z.discriminatedUnion('type', [title, flow, code, tests, checklist, mermaid, table, terminal])),
 });
