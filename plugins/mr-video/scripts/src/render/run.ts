@@ -7,6 +7,7 @@ import {postprocess, qaVideo, sha256, type QaReport} from '../media.ts';
 import type {Plan} from '../plan.ts';
 import {planSeconds, sceneSeconds} from '../timing.ts';
 import {type DiagramFrames, emphasisSteps} from '../diagram.ts';
+import {addVoiceTrack} from '../voice.ts';
 import {renderDiagrams} from './mermaid.ts';
 import type {ClipAsset, RenderPlan} from './types.ts';
 
@@ -53,6 +54,7 @@ export async function renderPlan(plan: Plan, outFile: string): Promise<RenderRes
       },
     });
     postprocess(raw, out);
+    if (plan.voice) addVoiceTrack(plan, out); // the plan went through resolveVoice
   } finally {
     rmSync(raw, {force: true});
     for (const f of files) rmSync(f, {force: true});
@@ -61,7 +63,7 @@ export async function renderPlan(plan: Plan, outFile: string): Promise<RenderRes
     console.info = info;
   }
 
-  const qa = qaVideo(out, planSeconds(plan));
+  const qa = qaVideo(out, planSeconds(plan), {audio: plan.voice});
   return {
     video: out,
     seconds: qa.seconds,

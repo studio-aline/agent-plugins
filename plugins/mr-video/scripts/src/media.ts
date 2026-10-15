@@ -29,7 +29,7 @@ export interface QaReport {
 }
 
 /** Checks the encoded file itself: frame count, length, full decode, stream layout. */
-export function qaVideo(file: string, expectedSeconds: number): QaReport {
+export function qaVideo(file: string, expectedSeconds: number, opts: {audio?: boolean} = {}): QaReport {
   const probe = JSON.parse(run(FFPROBE, ['-v', 'error', '-count_frames', '-show_streams', '-show_format', '-of', 'json', file]));
   const video = probe.streams.find((s: any) => s.codec_type === 'video');
   const audioStreams = probe.streams.filter((s: any) => s.codec_type === 'audio').length;
@@ -43,7 +43,8 @@ export function qaVideo(file: string, expectedSeconds: number): QaReport {
   if (Math.abs(frames - Math.round(seconds * fps)) > 1) problems.push(`프레임 수 ${frames} ≠ ${fps}fps × ${seconds.toFixed(2)}초`);
   if (Math.abs(seconds - expectedSeconds) > 0.5) problems.push(`길이 ${seconds.toFixed(2)}초가 예상 ${expectedSeconds.toFixed(2)}초와 다릅니다`);
   if (video?.pix_fmt !== 'yuv420p') problems.push(`픽셀 포맷 ${video?.pix_fmt}`);
-  if (audioStreams !== 0) problems.push(`오디오 트랙 ${audioStreams}개`);
+  const wantAudio = opts.audio ? 1 : 0;
+  if (audioStreams !== wantAudio) problems.push(`오디오 트랙 ${audioStreams}개 (예상 ${wantAudio}개)`);
   const decode = spawnSync(FFMPEG, ['-v', 'error', '-i', file, '-f', 'null', '-'], {encoding: 'utf8'});
   if (decode.status !== 0 || decode.stderr.trim() !== '') problems.push(`디코드 오류: ${decode.stderr.trim().slice(0, 300)}`);
 
