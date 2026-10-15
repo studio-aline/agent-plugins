@@ -12,7 +12,7 @@ import {buildTerminal} from './scenes/terminal.tsx';
 import {buildTests} from './scenes/tests.tsx';
 import {buildTitle} from './scenes/title.tsx';
 import {scheduleBeats} from './schedule.ts';
-import {COLOR, FONT, LAYOUT} from './theme.ts';
+import {applyTheme, COLOR, FONT, LAYOUT} from './theme.ts';
 import type {Beat, RenderPlan} from './types.ts';
 
 function build(s: Scene, stage: Node, plan: RenderPlan, index: number): Beat[] {
@@ -34,6 +34,7 @@ function build(s: Scene, stage: Node, plan: RenderPlan, index: number): Beat[] {
 
 export default makeScene2D('mr', function* (view) {
   const plan = decodePlan<RenderPlan>(useScene().variables.get('plan', '')());
+  applyTheme(plan.theme);
   view.fill(COLOR.bg);
 
   const id = plan.mr.iid !== undefined ? `!${plan.mr.iid}` : plan.mr.branch;

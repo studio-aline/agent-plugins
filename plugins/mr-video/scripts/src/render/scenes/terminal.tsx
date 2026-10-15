@@ -1,7 +1,11 @@
 import {Circle, Layout, Node, Rect, Txt} from '@revideo/2d';
 import {chain, createRef, linear} from '@revideo/core';
 import type {TerminalScene} from '../../plan.ts';
-import {COLOR, FONT, LAYOUT} from '../theme.ts';
+import {FONT, LAYOUT, PALETTES} from '../theme.ts';
+
+// Terminal windows stay dark in both themes, like real terminals.
+const T = PALETTES.dark;
+const WINDOW_BG = '#0b0f14';
 import type {Beat} from '../types.ts';
 import {revealAt, typeSeconds} from '../../timing.ts';
 
@@ -13,21 +17,21 @@ export function buildTerminal(s: TerminalScene, stage: Node): Beat[] {
   const outs = s.lines.map(() => createRef<Txt>());
 
   stage.add(
-    <Rect ref={card} layout direction="column" minWidth={1040} radius={12} fill="#0b0f14" stroke={COLOR.border} lineWidth={2}
+    <Rect ref={card} layout direction="column" minWidth={1040} radius={12} fill={WINDOW_BG} stroke={T.border} lineWidth={2}
           clip y={(LAYOUT.stageTop + LAYOUT.stageBottom) / 2}>
-      <Rect layout gap={8} padding={[10, 14]} fill={COLOR.card} alignItems="center">
-        <Circle size={12} fill={COLOR.bad} />
-        <Circle size={12} fill="#d29922" />
-        <Circle size={12} fill={COLOR.ok} />
+      <Rect layout gap={8} padding={[10, 14]} fill={T.card} alignItems="center">
+        <Circle size={12} fill={T.bad} />
+        <Circle size={12} fill={T.warn} />
+        <Circle size={12} fill={T.ok} />
       </Rect>
       <Layout layout direction="column" gap={10} padding={[18, 24]}>
         {s.lines.map((l, i) => (
           <Layout layout direction="column" gap={4}>
             <Layout layout gap={12}>
-              <Txt ref={prompts[i]} text={s.prompt ?? '>'} fontFamily={FONT.mono} fontSize={22} fill={COLOR.ok} opacity={0} />
-              <Txt ref={cmds[i]} text={l.cmd} fontFamily={FONT.mono} fontSize={22} fill={COLOR.fg} opacity={0} />
+              <Txt ref={prompts[i]} text={s.prompt ?? '>'} fontFamily={FONT.mono} fontSize={22} fill={T.ok} opacity={0} />
+              <Txt ref={cmds[i]} text={l.cmd} fontFamily={FONT.mono} fontSize={22} fill={T.fg} opacity={0} />
             </Layout>
-            {l.out ? <Txt ref={outs[i]} text={l.out} fontFamily={FONT.mono} fontSize={19} fill={COLOR.muted} opacity={0} /> : null}
+            {l.out ? <Txt ref={outs[i]} text={l.out} fontFamily={FONT.mono} fontSize={19} fill={T.muted} opacity={0} /> : null}
           </Layout>
         ))}
       </Layout>

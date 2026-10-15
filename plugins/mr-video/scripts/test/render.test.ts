@@ -40,9 +40,9 @@ describe('beats beyond the last caption', () => {
     expect(r.qa.problems).toEqual([]);
 
     const end = sceneEndTimes(plan)[plan.scenes.findIndex(s => s.type === 'tests')];
-    // Right column (x≈370..1180 in the 1280×720 frame) vs. an empty strip of background below it.
-    const column = regionLuma(r.video, end, 700, 250, 480, 120);
-    const background = regionLuma(r.video, end, 700, 480, 480, 60);
+    // Right column (heading + card at x≈670..1210, y≈170..260; columns hang from the top) vs. empty background below.
+    const column = regionLuma(r.video, end, 680, 170, 520, 90);
+    const background = regionLuma(r.video, end, 680, 400, 520, 60);
     console.error(`[one-caption] column=${column.toFixed(2)} background=${background.toFixed(2)}`);
     expect(column - background).toBeGreaterThan(2);
   });
@@ -85,5 +85,26 @@ describe('terminal scene', () => {
     const r = await renderPlan(plan, join(out, 'terminal.mp4'));
     expect(r.qa.problems).toEqual([]);
     contactSheet(r.video, sceneEndTimes(plan), join(out, 'terminal.png'));
+  });
+});
+
+describe('light theme', () => {
+  it('renders every scene type on a light background', {timeout: 300_000}, async () => {
+    const {FLOW_BEFORE_AFTER} = await import('./fixtures/mermaid.ts');
+    const raw: any = samplePlan();
+    raw.theme = 'light';
+    raw.scenes.splice(2, 0,
+      {type: 'mermaid', title: '동접 경로', code: FLOW_BEFORE_AFTER, emphasis: [{bad: ['C', 'LC']}, {accent: ['A', 'SR']}], captions: ['예전 경로입니다.', '바뀐 경로입니다.']},
+      {type: 'table', title: '비교', columns: ['방식', '판단'], accentRow: 1, rows: [['컬럼', '마이그레이션 필요'], ['JSON', '통째로 교체']], captions: ['비교합니다.']},
+      {type: 'terminal', title: '명령', lines: [{cmd: 'mix test', out: '54 tests, 0 failures'}], captions: ['테스트를 돌립니다.']},
+    );
+    const plan = parsePlan(raw);
+    const r = await renderPlan(plan, join(out, 'light.mp4'));
+    expect(r.qa.problems).toEqual([]);
+    // Corner of the frame (outside the caption band) is the page background.
+    expect(regionLuma(r.video, 1, 10, 100, 120, 60)).toBeGreaterThan(230);
+    const sheet = join(out, 'light.png');
+    contactSheet(r.video, sceneEndTimes(plan), sheet);
+    console.error(`[light] sheet ${sheet}`);
   });
 });
