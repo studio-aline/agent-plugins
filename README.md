@@ -1,6 +1,6 @@
 # Agent plugins for Claude Code, Codex, and Antigravity
 
-This repository provides Studio Aline's Claude Code and Codex plugin marketplaces
+This repository provides Aline Studio's Claude Code and Codex plugin marketplaces
 and Antigravity packages. It contains independently installable plugins for
 shared Claude guidance and optional OpenAI Codex routing, safe repository
 search, X7-formatted commits, guarded Git maintenance, private intranet access,
