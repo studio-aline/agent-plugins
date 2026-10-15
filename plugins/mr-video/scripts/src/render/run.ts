@@ -69,7 +69,7 @@ export async function renderPlan(plan: Plan, outFile: string): Promise<RenderRes
 /** Rasterize every mermaid scene (one picture per emphasis step), keyed by scene index. */
 async function prepareDiagrams(plan: Plan): Promise<Record<number, DiagramFrames>> {
   const scenes = plan.scenes.flatMap((s, i) => (s.type === 'mermaid' ? [{i, s}] : []));
-  const frames = await renderDiagrams(scenes.map(({s}) => ({code: s.code, steps: emphasisSteps(s)})));
+  const frames = await renderDiagrams(scenes.map(({s}) => ({code: s.code, steps: emphasisSteps(s)})), plan.theme);
   return Object.fromEntries(scenes.map(({i}, n) => [i, frames[n]]));
 }
 

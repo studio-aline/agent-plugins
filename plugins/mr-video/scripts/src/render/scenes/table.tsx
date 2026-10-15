@@ -21,7 +21,7 @@ export function buildTable(s: TableScene, stage: Node): Beat[] {
 
   stage.add(
     <Layout ref={table} layout direction="column" gap={6} y={(LAYOUT.stageTop + LAYOUT.stageBottom) / 2}>
-      <Rect layout radius={8} fill="#11161d">{s.columns.map((c, ci) => cell(c, ci, true, false))}</Rect>
+      <Rect layout radius={8} fill={COLOR.sunken}>{s.columns.map((c, ci) => cell(c, ci, true, false))}</Rect>
       {s.rows.map((r, ri) => (
         <Rect ref={rows[ri]} layout radius={8} fill={COLOR.card} opacity={0}
               stroke={ri === s.accentRow ? COLOR.accent : COLOR.border} lineWidth={ri === s.accentRow ? 3 : 1}>

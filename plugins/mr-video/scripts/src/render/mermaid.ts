@@ -3,7 +3,7 @@
 // canvas Revideo exports from.
 import {createRequire} from 'node:module';
 import puppeteer, {type Page} from 'puppeteer';
-import {COLOR, FONT} from './theme.ts';
+import {FONT, type Palette, PALETTES, paletteFor, type ThemeName} from './theme.ts';
 
 import type {DiagramFrames, Emphasis} from '../diagram.ts';
 
@@ -18,55 +18,57 @@ export interface DiagramJob {
   steps: Emphasis[];
 }
 
-export function emphasisCode(code: string, e: Emphasis): string {
+export function emphasisCode(code: string, e: Emphasis, p: Palette = PALETTES.dark): string {
   const lines = [
-    ...(e?.accent ?? []).map(id => `  style ${id} stroke:${COLOR.accent},stroke-width:4px`),
-    ...(e?.bad ?? []).map(id => `  style ${id} stroke:${COLOR.bad},stroke-width:4px,stroke-dasharray:6 4`),
+    ...(e?.accent ?? []).map(id => `  style ${id} stroke:${p.accent},stroke-width:4px`),
+    ...(e?.bad ?? []).map(id => `  style ${id} stroke:${p.bad},stroke-width:4px,stroke-dasharray:6 4`),
   ];
   return lines.length ? `${code}\n${lines.join('\n')}` : code;
 }
 
-const CONFIG = {
-  startOnLoad: false,
-  securityLevel: 'strict',
-  theme: 'base',
-  fontFamily: FONT.ui,
-  flowchart: {useMaxWidth: false},
-  sequence: {useMaxWidth: false},
-  er: {useMaxWidth: false},
-  themeVariables: {
-    darkMode: true,
+function mermaidConfig(p: Palette, dark: boolean) {
+  return {
+    startOnLoad: false,
+    securityLevel: 'strict',
+    theme: 'base',
     fontFamily: FONT.ui,
-    fontSize: '18px',
-    background: COLOR.bg,
-    primaryColor: COLOR.card,
-    primaryTextColor: COLOR.fg,
-    primaryBorderColor: COLOR.border,
-    secondaryColor: '#1c2330',
-    tertiaryColor: '#11161d',
-    lineColor: COLOR.muted,
-    textColor: COLOR.fg,
-    titleColor: COLOR.fg,
-    clusterBkg: '#11161d',
-    clusterBorder: COLOR.border,
-    edgeLabelBackground: COLOR.bg,
-    noteBkgColor: '#1f2a37',
-    noteTextColor: COLOR.fg,
-    noteBorderColor: COLOR.border,
-    actorBkg: COLOR.card,
-    actorBorder: COLOR.border,
-    actorTextColor: COLOR.fg,
-    actorLineColor: COLOR.border,
-    signalColor: COLOR.muted,
-    signalTextColor: COLOR.fg,
-    labelBoxBkgColor: COLOR.card,
-    labelBoxBorderColor: COLOR.border,
-    labelTextColor: COLOR.fg,
-    loopTextColor: COLOR.fg,
-    attributeBackgroundColorOdd: COLOR.card,
-    attributeBackgroundColorEven: '#11161d',
-  },
-};
+    flowchart: {useMaxWidth: false},
+    sequence: {useMaxWidth: false},
+    er: {useMaxWidth: false},
+    themeVariables: {
+      darkMode: dark,
+      fontFamily: FONT.ui,
+      fontSize: '18px',
+      background: p.bg,
+      primaryColor: p.card,
+      primaryTextColor: p.fg,
+      primaryBorderColor: p.border,
+      secondaryColor: p.raised,
+      tertiaryColor: p.sunken,
+      lineColor: p.muted,
+      textColor: p.fg,
+      titleColor: p.fg,
+      clusterBkg: p.sunken,
+      clusterBorder: p.border,
+      edgeLabelBackground: p.bg,
+      noteBkgColor: p.note,
+      noteTextColor: p.fg,
+      noteBorderColor: p.border,
+      actorBkg: p.card,
+      actorBorder: p.border,
+      actorTextColor: p.fg,
+      actorLineColor: p.border,
+      signalColor: p.muted,
+      signalTextColor: p.fg,
+      labelBoxBkgColor: p.card,
+      labelBoxBorderColor: p.border,
+      labelTextColor: p.fg,
+      loopTextColor: p.fg,
+      attributeBackgroundColorOdd: p.card,
+      attributeBackgroundColorEven: p.sunken,
+    },
+  };
+}
 
 /**
  * Center of the union box of the given flowchart ids, relative to the rendered picture.
@@ -92,17 +94,18 @@ async function focusOf(page: Page, renderId: string, ids: string[]): Promise<{x:
   );
 }
 
-export async function renderDiagrams(jobs: DiagramJob[]): Promise<DiagramFrames[]> {
+export async function renderDiagrams(jobs: DiagramJob[], theme?: ThemeName): Promise<DiagramFrames[]> {
+  const p = paletteFor(theme);
   if (jobs.length === 0) return [];
   const browser = await puppeteer.launch({headless: 'shell'});
   try {
     const page = await browser.newPage();
     await page.setViewport({width: 3000, height: 2000, deviceScaleFactor: 2});
     await page.setContent(
-      `<html><body style="margin:0;background:${COLOR.bg}"><div id="c" style="display:inline-block;padding:12px;background:${COLOR.bg}"></div></body></html>`,
+      `<html><body style="margin:0;background:${p.bg}"><div id="c" style="display:inline-block;padding:12px;background:${p.bg}"></div></body></html>`,
     );
     await page.addScriptTag({path: require.resolve('mermaid/dist/mermaid.min.js')});
-    await page.evaluate(cfg => (globalThis as any).mermaid.initialize(cfg), CONFIG);
+    await page.evaluate(cfg => (globalThis as any).mermaid.initialize(cfg), mermaidConfig(p, p === PALETTES.dark));
 
     const out: DiagramFrames[] = [];
     for (const [i, job] of jobs.entries()) {
@@ -118,7 +121,7 @@ export async function renderDiagrams(jobs: DiagramJob[]): Promise<DiagramFrames[
               return String((e as Error)?.message ?? e);
             }
           },
-          emphasisCode(job.code, step),
+          emphasisCode(job.code, step, p),
           `m${i}_${j}`,
         );
         if (error) throw new Error(`다이어그램 ${i} 렌더 실패: ${error.split('\n')[0]}`);

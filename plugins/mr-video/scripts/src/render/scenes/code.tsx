@@ -1,13 +1,10 @@
-import {Code, LezerHighlighter, Rect} from '@revideo/2d';
+import {Code, Rect} from '@revideo/2d';
 import {createRef} from '@revideo/core';
-import {parser as cppParser} from '@lezer/cpp';
-import {parser as elixirParser} from 'lezer-elixir';
 import type {CodeScene} from '../../plan.ts';
 import {literalPattern} from '../../regex.ts';
+import {highlighterFor} from '../highlight.ts';
 import {COLOR, FONT, LAYOUT} from '../theme.ts';
 import {type Beat, type Builder, idle} from '../types.ts';
-
-const HIGHLIGHTERS = {cpp: new LezerHighlighter(cppParser), elixir: new LezerHighlighter(elixirParser)};
 
 export const buildCode: Builder<CodeScene> = (s, stage, plan) => {
   const card = createRef<Rect>();
@@ -15,7 +12,7 @@ export const buildCode: Builder<CodeScene> = (s, stage, plan) => {
   stage.add(
     <Rect ref={card} fill={COLOR.card} radius={12} padding={28} stroke={COLOR.border} lineWidth={2} layout
           y={(LAYOUT.stageTop + LAYOUT.stageBottom) / 2}>
-      <Code ref={code} highlighter={HIGHLIGHTERS[plan.lang ?? 'cpp']} code={s.after} fontFamily={FONT.mono} fontSize={24} />
+      <Code ref={code} highlighter={highlighterFor(plan.lang ?? 'cpp', plan.theme)} code={s.after} fill={COLOR.fg} fontFamily={FONT.mono} fontSize={24} />
     </Rect>,
   );
 

@@ -222,3 +222,35 @@ describe('title meta', () => {
     expect(parsePlan(p).scenes[0]).toMatchObject({meta: 'rnd/mr-video · Revideo'});
   });
 });
+
+describe('theme', () => {
+  it('defaults to light and accepts dark', async () => {
+    const {PALETTES, paletteFor} = await import('../src/render/theme.ts');
+    expect(parsePlan(samplePlan()).theme).toBeUndefined();
+    const p: any = samplePlan();
+    p.theme = 'light';
+    expect(parsePlan(p).theme).toBe('light');
+    p.theme = 'sepia';
+    expect(() => parsePlan(p)).toThrow();
+    expect(paletteFor(undefined)).toBe(PALETTES.light);
+    expect(paletteFor('dark')).toBe(PALETTES.dark);
+    expect(paletteFor('light')).toBe(PALETTES.light);
+  });
+
+  it('keeps every palette color readable against its background', async () => {
+    const {PALETTES} = await import('../src/render/theme.ts');
+    const lum = (hex: string) => {
+      const [r, g, b] = [1, 3, 5].map(i => parseInt(hex.slice(i, i + 2), 16) / 255).map(c => (c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4));
+      return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+    };
+    const contrast = (a: string, b: string) => {
+      const [x, y] = [lum(a), lum(b)].sort((m, n) => n - m);
+      return (x + 0.05) / (y + 0.05);
+    };
+    for (const p of Object.values(PALETTES)) {
+      expect(contrast(p.fg, p.bg)).toBeGreaterThan(7);
+      expect(contrast(p.fg, p.card)).toBeGreaterThan(7);
+      for (const c of [p.muted, p.accent, p.ok, p.bad]) expect(contrast(c, p.bg)).toBeGreaterThan(3);
+    }
+  });
+});
