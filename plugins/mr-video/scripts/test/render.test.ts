@@ -134,3 +134,22 @@ describe('clip scene', () => {
     expect(late).toBeLessThan(40);
   });
 });
+
+describe('voice', () => {
+  it('renders with a voice track and captions held for the speech', {timeout: 300_000}, async () => {
+    const {resolveVoice} = await import('../src/voice.ts');
+    const raw: any = samplePlan();
+    raw.voice = true;
+    raw.scenes = raw.scenes.filter((s: any) => s.type !== 'code');
+    let plan;
+    try {
+      plan = resolveVoice(parsePlan(raw), out);
+    } catch (e) {
+      if (/한국어 음성이 없습니다|Windows에서만/.test((e as Error).message)) return; // no Korean voice on this machine
+      throw e;
+    }
+    const r = await renderPlan(plan, join(out, 'voice.mp4'));
+    expect(r.qa.problems).toEqual([]);
+    expect(r.qa.audioStreams).toBe(1);
+  });
+});

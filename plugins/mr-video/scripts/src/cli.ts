@@ -5,6 +5,7 @@ import {dirname, join, resolve} from 'node:path';
 import {parseArgs} from 'node:util';
 import {ZodError} from 'zod';
 import {resolveClips} from './clips.ts';
+import {resolveVoice} from './voice.ts';
 import {checkGrounding} from './grounding.ts';
 import {contactSheet} from './media.ts';
 import {buildBlock, inspectBody, sameBody, slug, upsertBlock, videoFileName} from './mr-body.ts';
@@ -51,9 +52,10 @@ function parsePlanFile(file: string): Plan {
   return parsePlan(JSON.parse(readFileSync(file, 'utf8')));
 }
 
-/** The plan with its clip recordings located (next to plan.json) and measured. */
+/** The plan with its clip recordings and (with voice) spoken captions located next to plan.json and measured. */
 function readPlan(file: string): Plan {
-  return resolveClips(parsePlanFile(file), dirname(resolve(file)));
+  const dir = dirname(resolve(file));
+  return resolveVoice(resolveClips(parsePlanFile(file), dir), dir);
 }
 
 function formatZod(e: ZodError): string[] {
@@ -107,7 +109,7 @@ async function main(argv: string[]): Promise<number> {
         throw e;
       }
       try {
-        plan = resolveClips(plan, dirname(resolve(file)));
+        plan = resolveVoice(resolveClips(plan, dirname(resolve(file))), dirname(resolve(file)));
       } catch (e) {
         print({ok: false, errors: [(e as Error).message], warnings: []});
         return 1;
@@ -222,7 +224,7 @@ async function main(argv: string[]): Promise<number> {
       const upload = JSON.parse(readFileSync(o.upload, 'utf8')) as {url?: unknown};
       if (typeof upload.url !== 'string' || !upload.url) throw new Error(`${o.upload}에 url이 없습니다 (upload 명령의 출력이어야 합니다)`);
       const plan = readPlan(o.plan);
-      const block = buildBlock({url: upload.url, sha7: plan.mr.head.slice(0, 7), seconds: planSeconds(plan)});
+      const block = buildBlock({url: upload.url, sha7: plan.mr.head.slice(0, 7), seconds: planSeconds(plan), voice: plan.voice});
       const body = upsertBlock(current, block);
       if (o.out) writeFileSync(o.out, body);
       else process.stdout.write(body);

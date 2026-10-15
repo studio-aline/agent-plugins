@@ -1,6 +1,6 @@
 # mr-video
 
-GitLab MR에 넣을 **자막 설명 영상**(음성 없음)을 만드는 플러그인. Claude Code(`/mr-video:mr-video`)나
+GitLab MR에 넣을 **자막 설명 영상**(요청하면 음성 포함)을 만드는 플러그인. Claude Code(`/mr-video:mr-video`)나
 Codex(`$mr-video`)에서 "MR에 설명 영상 넣어줘"라고 하면, 변경 내용과 MR 본문을 읽고 영상을 만들어
 **MR 본문 맨 위에** 넣는다.
 
@@ -21,6 +21,8 @@ Codex(`$mr-video`)에서 "MR에 설명 영상 넣어줘"라고 하면, 변경 �
 `table`(수정 전/후, 설계 결정 비교) · `terminal` · `tests` · `checklist` · `clip`(웹 화면 녹화).
 
 - 테마: 기본은 라이트. 요청 뒤에 `dark`를 붙이면 다크로 그린다(`/mr-video:mr-video dark`, `$mr-video dark`).
+- 음성: 요청 뒤에 `voice`를 붙이면 Windows 기본 한국어 음성(오프라인)으로 자막을 읽고, 자막은 읽기가 끝날 때까지 유지한다.
+  식별자처럼 읽기 어려운 자막은 `say`로 읽을 문장을 따로 줄 수 있다.
 - 구조·흐름이 바뀐 MR은 mermaid 다이어그램을 적극적으로 쓴다(본문에 없으면 코드에서 직접 그림).
 - `.uasset`·`.umap`이 바뀌면 VibeUE로 블루프린트·위젯을 읽어 변경 전/후를 mermaid로 비교한다.
   에디터가 꺼져 있거나 비교할 수 없으면 그 사실을 영상에 밝힌다.

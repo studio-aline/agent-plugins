@@ -268,3 +268,24 @@ describe('clip scenes', () => {
     expect(sceneSeconds({...clip, clipSeconds: 20})).toBeCloseTo(20.5); // long clip: clip + 0.5 s tail
   });
 });
+
+describe('voice timing', () => {
+  it('holds a caption until its spoken line ends', async () => {
+    const {holdSeconds, captionStarts} = await import('../src/timing.ts');
+    const scene = {type: 'title', captions: ['짧음', '두 번째'], voiceSeconds: [5, 0.5]};
+    expect(holdSeconds(scene, 0)).toBeCloseTo(5.4);
+    expect(holdSeconds(scene, 1)).toBe(captionSeconds('두 번째'));
+    expect(captionStarts({scenes: [scene, scene]})).toEqual([[0, 5.4], [5.4 + captionSeconds('두 번째'), 10.8 + captionSeconds('두 번째')]]);
+  });
+
+  it('checks that say matches the captions', () => {
+    const p: any = samplePlan();
+    p.voice = true;
+    p.scenes[0].say = ['하나', '둘', '셋', '넷', '다섯', '여섯'].slice(0, p.scenes[0].captions.length + 1);
+    expect(checkPlan(parsePlan(p)).errors.join()).toMatch(/say/);
+    p.scenes[0].say = p.scenes[0].captions.map(() => '읽을 문장');
+    expect(checkPlan(parsePlan(p)).errors).toEqual([]);
+    p.voice = false;
+    expect(checkPlan(parsePlan(p)).warnings.join()).toMatch(/say/);
+  });
+});

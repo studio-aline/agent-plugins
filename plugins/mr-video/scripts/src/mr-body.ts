@@ -3,12 +3,12 @@ const END = '<!-- mr-video:end -->';
 const BLOCK = String.raw`<!-- mr-video:start -->[\s\S]*?<!-- mr-video:end -->`;
 const BLOCK_RE = new RegExp(BLOCK);
 
-export function buildBlock(o: {url: string; sha7: string; seconds: number}): string {
+export function buildBlock(o: {url: string; sha7: string; seconds: number; voice?: boolean}): string {
   return [
     START,
     '## 🎬 설명 영상',
     `![설명 영상 · ${o.sha7}](${o.url})`,
-    `> \`${o.sha7}\` 기준 · ${Math.round(o.seconds)}초 · 자막 전용 · mr-video 생성`,
+    `> \`${o.sha7}\` 기준 · ${Math.round(o.seconds)}초 · ${o.voice ? '자막 + 음성' : '자막 전용'} · mr-video 생성`,
     END,
   ].join('\n');
 }

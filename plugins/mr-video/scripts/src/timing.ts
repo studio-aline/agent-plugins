@@ -20,13 +20,16 @@ interface Timed {
   captions: string[];
   lines?: {cmd: string; out?: string}[];
   clipSeconds?: number; // filled in Node by resolveClips
+  voiceSeconds?: number[]; // filled in Node by resolveVoice, one per caption
 }
 
 const CLIP_TAIL = 0.5;
+const VOICE_TAIL = 0.4; // breath after a spoken caption before the next one starts
 
 /** How long caption i holds: its reading time, or longer if the commands typed during it need it. */
 export function holdSeconds(scene: Timed, i: number): number {
-  const read = captionSeconds(scene.captions[i]);
+  const spoken = scene.voiceSeconds?.[i];
+  const read = Math.max(captionSeconds(scene.captions[i]), spoken === undefined ? 0 : spoken + VOICE_TAIL);
   if (scene.type !== 'terminal' || !scene.lines) return read;
   const k = scene.captions.length;
   const typing = scene.lines
@@ -49,4 +52,16 @@ export function sceneSeconds(scene: Timed): number {
 
 export function planSeconds(plan: {scenes: Timed[]}): number {
   return plan.scenes.reduce((sum, s) => sum + sceneSeconds(s), 0);
+}
+
+/** When each caption appears, per scene: starts[scene][caption] in seconds from the video start. */
+export function captionStarts(plan: {scenes: Timed[]}): number[][] {
+  let t = 0;
+  return plan.scenes.map(s =>
+    s.captions.map((_, i) => {
+      const start = t;
+      t += sceneHold(s, i);
+      return start;
+    }),
+  );
 }

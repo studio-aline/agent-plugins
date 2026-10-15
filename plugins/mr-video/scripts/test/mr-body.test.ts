@@ -4,6 +4,10 @@ import {buildBlock, inspectBody, sameBody, upsertBlock, videoFileName} from '../
 const block = buildBlock({url: '/uploads/abc/mr-1-abc1234.mp4', sha7: 'abc1234', seconds: 52.4});
 
 describe('buildBlock', () => {
+  it('says when the video has a voice track', () => {
+    expect(buildBlock({url: '/u/x.mp4', sha7: 'abc1234', seconds: 10, voice: true})).toContain('· 10초 · 자막 + 음성 ·');
+  });
+
   it('renders the marker block', () => {
     expect(block).toBe(
       [

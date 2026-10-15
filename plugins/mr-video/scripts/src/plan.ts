@@ -5,8 +5,10 @@ import {planSeconds} from './timing.ts';
 
 const sha = z.string().regex(/^[0-9a-f]{7,40}$/, '7~40자리 16진수 SHA여야 합니다');
 const captions = z.array(z.string().min(1).max(60)).min(1).max(6);
+// With voice: what to read aloud instead of each caption (same count), e.g. identifiers spelled for speech.
+const say = z.array(z.string().min(1).max(120)).optional();
 
-const title = z.object({type: z.literal('title'), title: z.string().min(1), summary: z.string().optional(), meta: z.string().optional(), captions});
+const title = z.object({type: z.literal('title'), title: z.string().min(1), summary: z.string().optional(), meta: z.string().optional(), captions, say});
 const flow = z.object({
   type: z.literal('flow'),
   title: z.string().min(1),
@@ -14,6 +16,7 @@ const flow = z.object({
   changed: z.array(z.number().int()).optional(),
   broken: z.array(z.number().int()).optional(),
   captions,
+  say,
 });
 const code = z.object({
   type: z.literal('code'),
@@ -23,6 +26,7 @@ const code = z.object({
   after: z.string().min(1),
   highlight: z.string().optional(),
   captions,
+  say,
 });
 const tests = z.object({
   type: z.literal('tests'),
@@ -30,12 +34,14 @@ const tests = z.object({
   ran: z.array(z.object({name: z.string().min(1), result: z.enum(['pass', 'fail'])})).max(5),
   notRun: z.array(z.string().min(1)).max(5),
   captions,
+  say,
 });
 const checklist = z.object({
   type: z.literal('checklist'),
   title: z.string().min(1),
   items: z.array(z.string().min(1)).min(1).max(5),
   captions,
+  say,
 });
 
 const ids = z.array(z.string().min(1)).optional();
@@ -46,6 +52,7 @@ const mermaid = z.object({
   // One entry per caption (flowcharts only); a caption without an entry keeps the previous emphasis.
   emphasis: z.array(z.object({accent: ids, bad: ids}).nullable()).optional(),
   captions,
+  say,
 });
 const terminal = z.object({
   type: z.literal('terminal'),
@@ -53,6 +60,7 @@ const terminal = z.object({
   prompt: z.string().optional(),
   lines: z.array(z.object({cmd: z.string().min(1), out: z.string().optional()})).min(1).max(8),
   captions,
+  say,
 });
 const clip = z.object({
   type: z.literal('clip'),
@@ -62,6 +70,7 @@ const clip = z.object({
   // Address shown in the window frame, e.g. http://localhost:4000/hive.
   url: z.string().optional(),
   captions,
+  say,
 });
 const table = z.object({
   type: z.literal('table'),
@@ -71,6 +80,7 @@ const table = z.object({
   accentRow: z.number().int().optional(),
   accentCol: z.number().int().optional(),
   captions,
+  say,
 });
 
 export const PlanSchema = z.object({
@@ -88,6 +98,8 @@ export const PlanSchema = z.object({
   lang: z.enum(['cpp', 'elixir']).optional(),
   // Video color theme; light when omitted.
   theme: z.enum(['dark', 'light']).optional(),
+  // Read the captions aloud with the Windows Korean voice; the video gets an audio track.
+  voice: z.boolean().optional(),
   scenes: z.array(z.discriminatedUnion('type', [title, flow, code, tests, checklist, mermaid, table, terminal, clip])),
 });
 
@@ -127,6 +139,8 @@ export function checkPlan(plan: Plan): CheckResult {
 
   plan.scenes.forEach((s, i) => {
     const at = `scenes[${i}](${s.type})`;
+    if (s.say && s.say.length !== s.captions.length) errors.push(`${at}: say(${s.say.length})는 captions(${s.captions.length})와 개수가 같아야 합니다`);
+    if (s.say && !plan.voice) warnings.push(`${at}: voice가 꺼져 있어 say는 쓰이지 않습니다`);
     if (s.type === 'flow') {
       for (const key of ['changed', 'broken'] as const) {
         for (const idx of s[key] ?? []) {
