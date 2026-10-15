@@ -1,9 +1,9 @@
 {
   "mr": {
     "project": "x7-claude-plugins",
-    "branch": "docs/studio-aline-org",
+    "branch": "chore/marketplace-agent-plugins",
     "base": "9260ca2736f9440998ba665e2d96eb74e438d9b9",
-    "head": "21bf77775b94b795d8d66bdb52d3e6b941bc0a34"
+    "head": "e25564aeca81d1d70aee8b44ed70e8191ce0b6ae"
   },
   "title": "mr-video 소개",
   "scenes": [
@@ -11,7 +11,7 @@
       "type": "title",
       "title": "mr-video — MR에 설명 영상을",
       "summary": "Claude Code나 Codex에게 \"MR에 설명 영상 넣어줘\"라고 하면 자막 영상을 만들어 MR 본문 맨 위에 넣습니다",
-      "meta": "mr-video@x7 · Claude Code · Codex",
+      "meta": "mr-video@agent-plugins · Claude Code · Codex",
       "captions": [
         "mr-video는 MR의 변경 내용을 자막 영상으로 만듭니다.",
         "만든 영상은 MR 본문 맨 위에 바로 들어갑니다."
@@ -126,13 +126,13 @@
           "cmd": "/plugin marketplace add studio-aline/x7-claude-plugins"
         },
         {
-          "cmd": "/plugin install mr-video@x7"
+          "cmd": "/plugin install mr-video@agent-plugins"
         },
         {
           "cmd": "codex plugin marketplace add studio-aline/x7-claude-plugins"
         },
         {
-          "cmd": "codex plugin add mr-video@x7"
+          "cmd": "codex plugin add mr-video@agent-plugins"
         },
         {
           "cmd": "setx GITLAB_HOST \"<GitLab 호스트>\"",

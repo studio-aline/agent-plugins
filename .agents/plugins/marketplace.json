@@ -1,6 +1,6 @@
 {
-  "name": "x7",
-  "interface": { "displayName": "X7 Team" },
+  "name": "agent-plugins",
+  "interface": { "displayName": "Agent Plugins" },
   "plugins": [
     { "name": "advisor", "source": { "source": "local", "path": "./plugins/advisor" }, "policy": { "installation": "AVAILABLE", "authentication": "ON_INSTALL" }, "category": "Developer Tools" },
     { "name": "ripgrep", "source": { "source": "local", "path": "./plugins/ripgrep" }, "policy": { "installation": "AVAILABLE", "authentication": "ON_INSTALL" }, "category": "Developer Tools" },

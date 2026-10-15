@@ -8,7 +8,7 @@ is installed and enabled.
 Install it directly when only the shared Claude guidance is needed:
 
 ```text
-/plugin install guidance@x7
+/plugin install guidance@agent-plugins
 /reload-plugins
 ```
 

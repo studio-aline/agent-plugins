@@ -1,6 +1,6 @@
-# X7 Claude, Codex, and Antigravity plugins
+# Agent plugins for Claude Code, Codex, and Antigravity
 
-This repository provides the X7 team's Claude Code and Codex plugin marketplaces
+This repository provides Aline Studio's Claude Code and Codex plugin marketplaces
 and Antigravity packages. It contains independently installable plugins for
 shared Claude guidance and optional OpenAI Codex routing, safe repository
 search, X7-formatted commits, guarded Git maintenance, private intranet access,
@@ -10,7 +10,7 @@ can be added under `plugins/` without changing the marketplace identity.
 Repository:
 [studio-aline/x7-claude-plugins](https://github.com/studio-aline/x7-claude-plugins)
 
-The marketplace name is `x7`. Individual plugins retain their own identifiers
+The marketplace name is `agent-plugins`. Individual plugins retain their own identifiers
 and command namespaces, such as `guidance`, `/codex:*`, and `/git:*`.
 
 ## Plugins
@@ -135,17 +135,17 @@ Run the following commands in Claude Code:
 
 ```text
 /plugin marketplace add studio-aline/x7-claude-plugins
-/plugin install guidance@x7
-/plugin install advisor@x7
-/plugin install ripgrep@x7
-/plugin install git@x7
-/plugin install internal-web@x7
-/plugin install vibeue@x7
-/plugin install mr-video@x7
+/plugin install guidance@agent-plugins
+/plugin install advisor@agent-plugins
+/plugin install ripgrep@agent-plugins
+/plugin install git@agent-plugins
+/plugin install internal-web@agent-plugins
+/plugin install vibeue@agent-plugins
+/plugin install mr-video@agent-plugins
 /reload-plugins
 ```
 
-Install `guidance@x7` directly when only the shared Claude policy is needed.
+Install `guidance@agent-plugins` directly when only the shared Claude policy is needed.
 Install OpenAI's `codex@openai-codex` plugin separately to activate the
 conditional Codex routing guidance:
 
@@ -185,12 +185,12 @@ that supports the `codex plugin` commands:
 
 ```powershell
 codex plugin marketplace add studio-aline/x7-claude-plugins
-codex plugin add advisor@x7
-codex plugin add ripgrep@x7
-codex plugin add git@x7
-codex plugin add internal-web@x7
-codex plugin add vibeue@x7
-codex plugin add mr-video@x7
+codex plugin add advisor@agent-plugins
+codex plugin add ripgrep@agent-plugins
+codex plugin add git@agent-plugins
+codex plugin add internal-web@agent-plugins
+codex plugin add vibeue@agent-plugins
+codex plugin add mr-video@agent-plugins
 codex plugin list
 ```
 
@@ -244,14 +244,14 @@ Refresh the marketplace, then update each installed plugin. Omit plugins that
 are not installed:
 
 ```powershell
-claude plugin marketplace update x7
-claude plugin update guidance@x7
-claude plugin update advisor@x7
-claude plugin update ripgrep@x7
-claude plugin update git@x7
-claude plugin update internal-web@x7
-claude plugin update vibeue@x7
-claude plugin update mr-video@x7
+claude plugin marketplace update agent-plugins
+claude plugin update guidance@agent-plugins
+claude plugin update advisor@agent-plugins
+claude plugin update ripgrep@agent-plugins
+claude plugin update git@agent-plugins
+claude plugin update internal-web@agent-plugins
+claude plugin update vibeue@agent-plugins
+claude plugin update mr-video@agent-plugins
 ```
 
 Restart Claude Code after the updates are complete. Update the separately
@@ -263,13 +263,13 @@ Refresh the Git marketplace snapshot. Installed X7 plugins refer to that
 snapshot, so a separate install command is not required:
 
 ```powershell
-codex plugin marketplace upgrade x7
+codex plugin marketplace upgrade agent-plugins
 codex plugin list
 ```
 
 Restart Codex after the marketplace upgrade so the refreshed skills are
 loaded. If a new X7 plugin was added to the marketplace, install it separately
-with `codex plugin add <plugin>@x7`.
+with `codex plugin add <plugin>@agent-plugins`.
 
 ### Antigravity
 
@@ -321,7 +321,7 @@ add the marketplace and desired plugins to the consuming repository's
 ```json
 {
   "extraKnownMarketplaces": {
-    "x7": {
+    "agent-plugins": {
       "source": {
         "source": "github",
         "repo": "studio-aline/x7-claude-plugins"
@@ -329,17 +329,17 @@ add the marketplace and desired plugins to the consuming repository's
     }
   },
   "enabledPlugins": {
-    "advisor@x7": true,
-    "ripgrep@x7": true,
-    "git@x7": true,
-    "internal-web@x7": true,
-    "vibeue@x7": true,
-    "mr-video@x7": true
+    "advisor@agent-plugins": true,
+    "ripgrep@agent-plugins": true,
+    "git@agent-plugins": true,
+    "internal-web@agent-plugins": true,
+    "vibeue@agent-plugins": true,
+    "mr-video@agent-plugins": true
   }
 }
 ```
 
-Enable `guidance@x7` for shared Claude guidance. Install and enable
+Enable `guidance@agent-plugins` for shared Claude guidance. Install and enable
 `codex@openai-codex` separately to activate its Codex-routing extension.
 
 ## Development
