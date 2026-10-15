@@ -8,7 +8,7 @@ VibeUE Unreal Engine MCP workflows, and subtitled GitLab MR explainer videos. Ad
 can be added under `plugins/` without changing the marketplace identity.
 
 Repository:
-[studio-aline/x7-claude-plugins](https://github.com/studio-aline/x7-claude-plugins)
+[studio-aline/agent-plugins](https://github.com/studio-aline/agent-plugins)
 
 The marketplace name is `agent-plugins`. Individual plugins retain their own identifiers
 and command namespaces, such as `guidance`, `/codex:*`, and `/git:*`.
@@ -134,7 +134,7 @@ is installed and enabled.
 Run the following commands in Claude Code:
 
 ```text
-/plugin marketplace add studio-aline/x7-claude-plugins
+/plugin marketplace add studio-aline/agent-plugins
 /plugin install guidance@agent-plugins
 /plugin install advisor@agent-plugins
 /plugin install ripgrep@agent-plugins
@@ -184,7 +184,7 @@ Install the marketplace and plugins from a terminal with a Codex CLI version
 that supports the `codex plugin` commands:
 
 ```powershell
-codex plugin marketplace add studio-aline/x7-claude-plugins
+codex plugin marketplace add studio-aline/agent-plugins
 codex plugin add advisor@agent-plugins
 codex plugin add ripgrep@agent-plugins
 codex plugin add git@agent-plugins
@@ -206,8 +206,8 @@ Antigravity plugins in this repository are installed at workspace scope. Clone
 the repository, then open its root directory as the workspace in Antigravity:
 
 ```powershell
-git clone https://github.com/studio-aline/x7-claude-plugins.git
-cd x7-claude-plugins
+git clone https://github.com/studio-aline/agent-plugins.git
+cd agent-plugins
 ```
 
 Antigravity discovers the generated packages from `.agents/plugins/` and the
@@ -288,8 +288,8 @@ completion in Antigravity GUI to confirm that the updated skills are loaded.
 Clone the repository:
 
 ```powershell
-git clone https://github.com/studio-aline/x7-claude-plugins.git
-cd x7-claude-plugins
+git clone https://github.com/studio-aline/agent-plugins.git
+cd agent-plugins
 claude --plugin-dir .\plugins\guidance
 claude --plugin-dir .\plugins\advisor
 claude --plugin-dir .\plugins\ripgrep
@@ -313,7 +313,7 @@ claude --plugin-dir ./plugins/mr-video
 
 ## Team distribution
 
-Team members can add `studio-aline/x7-claude-plugins` as a marketplace and
+Team members can add `studio-aline/agent-plugins` as a marketplace and
 install any plugin using the commands above. For repository-guided installation,
 add the marketplace and desired plugins to the consuming repository's
 `.claude/settings.json`:
@@ -324,7 +324,7 @@ add the marketplace and desired plugins to the consuming repository's
     "agent-plugins": {
       "source": {
         "source": "github",
-        "repo": "studio-aline/x7-claude-plugins"
+        "repo": "studio-aline/agent-plugins"
       }
     }
   },

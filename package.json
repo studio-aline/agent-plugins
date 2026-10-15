@@ -1,5 +1,5 @@
 {
-  "name": "x7-claude-plugins",
+  "name": "agent-plugins",
   "private": true,
   "type": "module",
   "scripts": {
