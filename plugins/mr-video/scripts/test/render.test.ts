@@ -189,3 +189,38 @@ describe('more languages', () => {
     console.error(`[langs] ${sheet}`);
   });
 });
+
+describe('dark theme', () => {
+  it('renders every scene type, each code language and a clip on a dark background', {timeout: 300_000}, async () => {
+    const {execFileSync} = await import('node:child_process');
+    const {FFMPEG} = await import('../src/media.ts');
+    const {resolveClips} = await import('../src/clips.ts');
+    const {FLOW_BEFORE_AFTER} = await import('./fixtures/mermaid.ts');
+    execFileSync(FFMPEG, ['-v', 'error', '-y', '-f', 'lavfi', '-i', 'testsrc=size=1280x720:rate=30:duration=2', '-pix_fmt', 'yuv420p', '-c:v', 'libx264', join(out, 'dark-clip.mp4')]);
+    const raw: any = samplePlan();
+    raw.theme = 'dark';
+    delete raw.lang;
+    const code = (file: string, after: string, highlight: string) =>
+      ({type: 'code', title: file, file, after, highlight, captions: [`${file} 변경입니다.`]});
+    raw.scenes.splice(2, 0,
+      {type: 'mermaid', title: '동접 경로', code: FLOW_BEFORE_AFTER, emphasis: [{bad: ['C', 'LC']}, {accent: ['A', 'SR']}], captions: ['예전 경로입니다.', '바뀐 경로입니다.']},
+      {type: 'table', title: '비교', columns: ['방식', '판단'], accentRow: 1, rows: [['컬럼', '마이그레이션 필요'], ['JSON', '통째로 교체']], captions: ['비교합니다.']},
+      {type: 'terminal', title: '명령', lines: [{cmd: 'mix test', out: '54 tests, 0 failures'}], captions: ['테스트를 돌립니다.']},
+      {type: 'clip', title: '결과 화면', file: 'dark-clip.mp4', url: 'http://localhost:4000/hive', captions: ['화면을 녹화했습니다.']},
+      code('lib/hive/stack.ex', 'def merge(a, b), do: min(a + b, @max)', 'min(a + b, @max)'),
+      code('Assets/Scripts/Player.cs', 'public void Hit(int d)\n{\n    // 방어력만큼 줄인다\n    Hp -= Math.Max(0, d - Armor);\n}', 'Math.Max(0, d - Armor)'),
+      code('web/src/Badge.tsx', 'export const Badge = ({n}: {n: number}) => (\n  <span className="badge">{n > 99 ? "99+" : n}</span>\n);', 'n > 99 ? "99+" : n'),
+      code('web/src/retry.js', 'export async function retry(fn, times = 3) {\n  return fn().catch(() => (times > 1 ? retry(fn, times - 1) : null));\n}', 'times - 1'),
+      code('crates/stack/src/lib.rs', 'pub fn merge(a: u32, b: u32, max: u32) -> (u32, u32) {\n    let total = a + b;\n    (total.min(max), total.saturating_sub(max))\n}', 'total.saturating_sub(max)'),
+    );
+    const plan = resolveClips(parsePlan(raw), out);
+    const {checkPlan} = await import('../src/plan.ts');
+    expect(checkPlan(plan).errors).toEqual([]);
+    const r = await renderPlan(plan, join(out, 'dark.mp4'));
+    expect(r.qa.problems).toEqual([]);
+    expect(regionLuma(r.video, 1, 10, 100, 120, 60)).toBeLessThan(40);
+    const sheet = join(out, 'dark.png');
+    contactSheet(r.video, sceneEndTimes(plan), sheet);
+    console.error(`[dark] sheet ${sheet}`);
+  });
+});

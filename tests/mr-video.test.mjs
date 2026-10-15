@@ -25,7 +25,7 @@ test("mr-video is registered for Claude Code and Codex with aligned manifests", 
   const codexManifest = JSON.parse(fs.readFileSync(path.join(plugin, ".codex-plugin", "plugin.json"), "utf8"));
   assert.equal(claudeManifest.name, "mr-video");
   assert.equal(codexManifest.name, claudeManifest.name);
-  assert.equal(claudeManifest.version, "0.2.0");
+  assert.equal(claudeManifest.version, "0.2.1");
   assert.equal(codexManifest.version, claudeManifest.version);
   assert.equal(codexManifest.skills, "./skills/");
   assert.equal(codexManifest.description, claudeManifest.description);
