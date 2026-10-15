@@ -153,3 +153,39 @@ describe('voice', () => {
     expect(r.qa.audioStreams).toBe(1);
   });
 });
+
+describe('more languages', () => {
+  it('renders C#, TypeScript (TSX), JavaScript and Rust code scenes', {timeout: 300_000}, async () => {
+    const raw: any = samplePlan();
+    delete raw.lang;
+    const code = (file: string, before: string, after: string, highlight: string) =>
+      ({type: 'code', title: file, file, before, after, highlight, captions: ['변경 전입니다.', '변경 후입니다.']});
+    raw.scenes = [
+      raw.scenes[0],
+      code('Assets/Scripts/Player.cs',
+        'public void Hit(int damage)\n{\n    Hp -= damage;\n}',
+        'public void Hit(int damage)\n{\n    // 방어력만큼 줄인다\n    Hp -= Math.Max(0, damage - Armor);\n}',
+        'Math.Max(0, damage - Armor)'),
+      code('web/src/Badge.tsx',
+        'export function Badge({n}: {n: number}) {\n  return <span>{n}</span>;\n}',
+        'export function Badge({n}: {n: number}) {\n  const label = n > 99 ? "99+" : String(n);\n  return <span className="badge">{label}</span>;\n}',
+        'n > 99 ? "99+" : String(n)'),
+      code('web/src/retry.js',
+        'export async function retry(fn) {\n  return fn();\n}',
+        'export async function retry(fn, times = 3) {\n  for (let i = 0; i < times - 1; i++) {\n    try { return await fn(); } catch {}\n  }\n  return fn();\n}',
+        'times = 3'),
+      code('crates/stack/src/lib.rs',
+        'pub fn merge(dst: &mut Item, src: &Item) {\n    dst.count = (dst.count + src.count).min(dst.max);\n}',
+        'pub fn merge(dst: &mut Item, src: &Item) -> u32 {\n    let total = dst.count + src.count;\n    dst.count = total.min(dst.max);\n    total - dst.count\n}',
+        'total - dst.count'),
+    ];
+    const plan = parsePlan(raw);
+    const {checkPlan} = await import('../src/plan.ts');
+    expect(checkPlan(plan).errors).toEqual([]);
+    const r = await renderPlan(plan, join(out, 'langs.mp4'));
+    expect(r.qa.problems).toEqual([]);
+    const sheet = join(out, 'langs.png');
+    contactSheet(r.video, sceneEndTimes(plan), sheet);
+    console.error(`[langs] ${sheet}`);
+  });
+});

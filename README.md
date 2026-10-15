@@ -89,12 +89,16 @@ and command namespaces, such as `guidance`, `/codex:*`, and `/git:*`.
 
 ### `mr-video`
 
-- `/mr-video:mr-video` — render a subtitle-only explainer video of the author's
+- `/mr-video:mr-video` — render a subtitled explainer video of the author's
   own GitLab MR change and embed it at the top of the MR description. Runs only
-  when explicitly requested.
+  when explicitly requested. Add `dark` for the dark theme (light by default)
+  and `voice` for Korean narration with the built-in Windows voice.
 - Uses the MR description as primary material: mermaid diagrams (with
   per-caption node emphasis), before/after code, comparison tables, terminal
-  commands, and test results.
+  commands, and test results. Code scenes support C++, Elixir, C#,
+  JavaScript, TypeScript (including TSX), and Rust, chosen by file extension.
+- For web changes, records the changed feature on a running localhost dev
+  server with its own browser profile and plays it as a scene.
 - Checks every code scene against the real base/head commits, QA's the encoded
   MP4, changes the MR only after a successful upload, replaces only its marker
   block, and verifies the saved description byte for byte.
@@ -120,7 +124,9 @@ and command namespaces, such as `guidance`, `/codex:*`, and `/git:*`.
   for the `vibeue` plugin. Its MCP server defaults to port `8088`; override
   with `VIBEUE_MCP_PORT` if the project's VibeUE proxy uses a different port.
 - Windows, Node.js with npm, and Git on `PATH` for the `mr-video` plugin, plus
-  `GITLAB_HOST` and `GITLAB_TOKEN` (a PAT with `api` scope) set for uploads.
+  `GITLAB_HOST` and `GITLAB_TOKEN` set: a personal access token with `api` scope.
+  A project or group access token acts as a bot account and cannot edit MR
+  descriptions.
 
 For Claude Code Codex delegation, install OpenAI's [Codex plugin for Claude
 Code](https://github.com/openai/codex-plugin-cc) separately. X7's routing and

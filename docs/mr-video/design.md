@@ -17,9 +17,9 @@ GitLab에 MR을 올릴 때, 작성자가 **자신이 변경·구현한 내용**�
 | 음성 | 없음, 자막만 | 사무실에서 소리 없이 시청 |
 | 실행 위치 | 작성자 로컬 Windows PC만 | 시스템 폰트(맑은 고딕, Consolas) 사용 가능 |
 | 형태 | Claude Code 스킬 + `mr-video` CLI | MCP 서버는 필요해질 때 CLI 래퍼로 추가 |
-| 업로드 인증 | PAT(`api` 스코프)를 `GITLAB_TOKEN` 환경 변수로 | GitLab 내장 MCP는 OAuth라 토큰 재사용 불가 |
+| 업로드 인증 | 개인 액세스 토큰(`api` 권한)을 `GITLAB_TOKEN` 환경 변수로. 프로젝트·그룹 토큰은 봇 계정이라 MR 본문 수정 불가 | GitLab 내장 MCP는 OAuth라 토큰 재사용 불가 |
 | 확인 단계 | 없음, 호출 시 끝까지 자동 진행 | 사용자 선택 |
-| 언어 | MR 하나당 C++ 또는 Elixir 하나 | `@lezer/cpp`, `lezer-elixir` |
+| 언어 | 코드 장면마다 파일 확장자로: C++, Elixir, C#, JavaScript, TypeScript, Rust | `@lezer/cpp`, `lezer-elixir`, `@lezer/javascript`, `@lezer/rust`, C#은 Lezer 문법이 없어 CodeMirror legacy C# 모드 |
 
 ## 스파이크 결과 (2026-10-13, 이 PC)
 
@@ -133,7 +133,7 @@ GitLab에 MR을 올릴 때, 작성자가 **자신이 변경·구현한 내용**�
 |---|---|
 | 단위(vitest) | 스키마, 길이 계산, 언어 판별, 본문 블록 삽입/교체/보존, 파일 이름, base64 왕복 |
 | 근거 검사 | 임시 git 레포(base/head 커밋)로 일치·불일치 |
-| 렌더 스모크 | C++/Elixir 예제 렌더 → 프레임 수 = fps × 길이, 디코드 오류 없음, preview 생성 |
+| 렌더 스모크 | C++/Elixir/C#/TS/JS/Rust 예제 렌더 → 프레임 수 = fps × 길이, 디코드 오류 없음, preview 생성 |
 | 강조 회귀 | 강조 줄 영역이 흐린 줄보다 밝은지 프레임 픽셀로 확인 |
 | 업로드 | 로컬 목 HTTP 서버로 multipart 형식과 401/413 메시지 |
 | 수동 1회 | 테스트 프로젝트 MR에서 GitLab 인라인 재생 확인 |

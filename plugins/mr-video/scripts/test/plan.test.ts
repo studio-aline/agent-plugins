@@ -83,12 +83,21 @@ describe('checkPlan (structure rules beyond the schema)', () => {
     expect(checkPlan(p).errors.join()).toMatch(/broken/);
   });
 
-  it('rejects a code file whose extension does not match lang', () => {
+  it('highlights by file extension and only warns when it differs from lang', () => {
     const p = parsePlan(samplePlan());
     const code = p.scenes.find(s => s.type === 'code')!;
     if (code.type !== 'code') throw new Error();
     code.file = 'lib/foo.ex';
-    expect(checkPlan(p).errors.join()).toMatch(/lang/);
+    expect(checkPlan(p).errors).toEqual([]);
+    expect(checkPlan(p).warnings.join()).toMatch(/elixir/);
+  });
+
+  it('rejects a code file in an unsupported language', () => {
+    const p = parsePlan(samplePlan());
+    const code = p.scenes.find(s => s.type === 'code')!;
+    if (code.type !== 'code') throw new Error();
+    code.file = 'tools/build.py';
+    expect(checkPlan(p).errors.join()).toMatch(/지원하지 않는 언어/);
   });
 });
 
@@ -123,6 +132,13 @@ describe('detectLang', () => {
     expect(detectLang('lib/a.ex')).toBe('elixir');
     expect(detectLang('test/a_test.exs')).toBe('elixir');
     expect(detectLang('README.md')).toBeUndefined();
+  });
+
+  it('maps C#, JavaScript, TypeScript and Rust extensions', () => {
+    expect(detectLang('Assets/Scripts/Player.cs')).toBe('csharp');
+    for (const f of ['a.js', 'a.mjs', 'a.cjs', 'a.jsx']) expect(detectLang(f), f).toBe('javascript');
+    for (const f of ['a.ts', 'a.mts', 'a.cts', 'a.tsx']) expect(detectLang(f), f).toBe('typescript');
+    expect(detectLang('src/main.rs')).toBe('rust');
   });
 });
 
@@ -193,10 +209,10 @@ describe('terminal scene and optional lang', () => {
     expect(checkPlan(parsePlan(p)).errors).toEqual([]);
   });
 
-  it('requires lang when there is a code scene', () => {
+  it('does not need lang for code scenes', () => {
     const p: any = samplePlan();
     delete p.lang;
-    expect(checkPlan(parsePlan(p)).errors.join()).toMatch(/lang/);
+    expect(checkPlan(parsePlan(p)).errors).toEqual([]);
   });
 });
 

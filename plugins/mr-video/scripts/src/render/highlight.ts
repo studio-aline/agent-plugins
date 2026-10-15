@@ -1,8 +1,12 @@
-import {HighlightStyle} from '@codemirror/language';
+import {HighlightStyle, StreamLanguage} from '@codemirror/language';
+import {csharp} from '@codemirror/legacy-modes/mode/clike';
 import {tags as t} from '@lezer/highlight';
 import {DefaultHighlightStyle, LezerHighlighter} from '@revideo/2d';
 import {parser as cppParser} from '@lezer/cpp';
 import {parser as elixirParser} from 'lezer-elixir';
+import {parser as jsParser} from '@lezer/javascript';
+import {parser as rustParser} from '@lezer/rust';
+import type {Lang} from '../lang.ts';
 import {DEFAULT_THEME, type ThemeName} from './theme.ts';
 
 // Readable on a white card; colors in the spirit of common light editor themes.
@@ -20,13 +24,24 @@ const LightHighlightStyle = HighlightStyle.define([
   {tag: [t.annotation, t.meta], color: '#116329'},
 ]);
 
-const PARSERS = {cpp: cppParser, elixir: elixirParser};
+// TypeScript and JavaScript share one grammar; the dialect follows the file (JSX only where it is used).
+const PARSERS = {
+  cpp: cppParser,
+  elixir: elixirParser,
+  // No usable Lezer grammar for C# exists; CodeMirror's token-based C# mode highlights it reliably.
+  csharp: StreamLanguage.define(csharp).parser,
+  rust: rustParser,
+  javascript: jsParser.configure({dialect: 'jsx'}),
+  typescript: jsParser.configure({dialect: 'ts'}),
+  tsx: jsParser.configure({dialect: 'ts jsx'}),
+};
 const STYLES = {dark: DefaultHighlightStyle, light: LightHighlightStyle};
 const cache = new Map<string, LezerHighlighter>();
 
-export function highlighterFor(lang: keyof typeof PARSERS, theme: ThemeName | undefined): LezerHighlighter {
+export function highlighterFor(lang: Lang, theme: ThemeName | undefined, jsx = false): LezerHighlighter {
   const t = theme ?? DEFAULT_THEME;
-  const key = `${lang}:${t}`;
-  if (!cache.has(key)) cache.set(key, new LezerHighlighter(PARSERS[lang], STYLES[t]));
+  const grammar: keyof typeof PARSERS = lang === 'typescript' && jsx ? 'tsx' : lang;
+  const key = `${grammar}:${t}`;
+  if (!cache.has(key)) cache.set(key, new LezerHighlighter(PARSERS[grammar], STYLES[t]));
   return cache.get(key)!;
 }
