@@ -33,7 +33,7 @@ const ARCHITECTURE = `flowchart LR
 function introPlan(): Plan {
   const first = git('rev-list', '--max-parents=0', 'HEAD');
   return parsePlan({
-    mr: {project: 'x7-claude-plugins', branch: git('branch', '--show-current') || 'main', base: first, head: git('rev-parse', 'HEAD')},
+    mr: {project: 'agent-plugins', branch: git('branch', '--show-current') || 'main', base: first, head: git('rev-parse', 'HEAD')},
     title: 'mr-video 소개',
     scenes: [
       {
@@ -87,9 +87,9 @@ function introPlan(): Plan {
         title: '설치 (Windows)',
         prompt: '>',
         lines: [
-          {cmd: '/plugin marketplace add studio-aline/x7-claude-plugins'},
+          {cmd: '/plugin marketplace add studio-aline/agent-plugins'},
           {cmd: '/plugin install mr-video@agent-plugins'},
-          {cmd: 'codex plugin marketplace add studio-aline/x7-claude-plugins'},
+          {cmd: 'codex plugin marketplace add studio-aline/agent-plugins'},
           {cmd: 'codex plugin add mr-video@agent-plugins'},
           {cmd: 'setx GITLAB_HOST "<GitLab 호스트>"', out: '성공: 지정한 값을 저장했습니다.'},
           {cmd: 'setx GITLAB_TOKEN "<api 스코프 PAT>"', out: '성공: 지정한 값을 저장했습니다.'},

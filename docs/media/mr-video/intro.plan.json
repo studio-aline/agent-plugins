@@ -1,9 +1,9 @@
 {
   "mr": {
-    "project": "x7-claude-plugins",
-    "branch": "chore/marketplace-agent-plugins",
+    "project": "agent-plugins",
+    "branch": "docs/repo-agent-plugins",
     "base": "9260ca2736f9440998ba665e2d96eb74e438d9b9",
-    "head": "e25564aeca81d1d70aee8b44ed70e8191ce0b6ae"
+    "head": "defe5e61da318aca101b2f87a6ff7d670ae1df86"
   },
   "title": "mr-video 소개",
   "scenes": [
@@ -123,13 +123,13 @@
       "prompt": ">",
       "lines": [
         {
-          "cmd": "/plugin marketplace add studio-aline/x7-claude-plugins"
+          "cmd": "/plugin marketplace add studio-aline/agent-plugins"
         },
         {
           "cmd": "/plugin install mr-video@agent-plugins"
         },
         {
-          "cmd": "codex plugin marketplace add studio-aline/x7-claude-plugins"
+          "cmd": "codex plugin marketplace add studio-aline/agent-plugins"
         },
         {
           "cmd": "codex plugin add mr-video@agent-plugins"

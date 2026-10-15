@@ -1,6 +1,6 @@
 {
   "name": "mr-video",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "Render a subtitled explainer video of a GitLab MR change and embed it at the top of the MR description.",
   "author": {
     "name": "X7 Team"
