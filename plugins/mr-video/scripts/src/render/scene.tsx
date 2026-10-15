@@ -2,7 +2,8 @@ import {Node, Rect, Txt, makeScene2D} from '@revideo/2d';
 import {all, chain, createRef, useScene, waitFor} from '@revideo/core';
 import {decodePlan} from '../codec.ts';
 import type {Scene} from '../plan.ts';
-import {holdSeconds} from '../timing.ts';
+import {sceneHold} from '../timing.ts';
+import {buildClip} from './scenes/clip.tsx';
 import {buildChecklist} from './scenes/checklist.tsx';
 import {buildCode} from './scenes/code.tsx';
 import {buildFlow} from './scenes/flow.tsx';
@@ -28,6 +29,11 @@ function build(s: Scene, stage: Node, plan: RenderPlan, index: number): Beat[] {
       const d = plan.diagrams?.[index];
       if (!d) throw new Error(`scenes[${index}]: 다이어그램 이미지가 준비되지 않았습니다`);
       return buildMermaid(s, stage, d);
+    }
+    case 'clip': {
+      const c = plan.clips?.[index];
+      if (!c) throw new Error(`scenes[${index}]: 녹화 영상이 준비되지 않았습니다`);
+      return buildClip(s, stage, c.src, c);
     }
   }
 }
@@ -58,7 +64,7 @@ export default makeScene2D('mr', function* (view) {
     const steps = scheduleBeats(build(s, stage(), plan, index), s.captions.length);
     for (let i = 0; i < s.captions.length; i++) {
       caption().text(s.captions[i]); // swap at the cut, never cross-fade copy
-      yield* all(chain(...steps[i].map(b => b())), waitFor(holdSeconds(s, i)));
+      yield* all(chain(...steps[i].map(b => b())), waitFor(sceneHold(s, i)));
     }
     stage().remove();
   }

@@ -54,6 +54,15 @@ const terminal = z.object({
   lines: z.array(z.object({cmd: z.string().min(1), out: z.string().optional()})).min(1).max(8),
   captions,
 });
+const clip = z.object({
+  type: z.literal('clip'),
+  title: z.string().min(1),
+  // Recording made with `record` (path relative to plan.json, or absolute).
+  file: z.string().min(1),
+  // Address shown in the window frame, e.g. http://localhost:4000/hive.
+  url: z.string().optional(),
+  captions,
+});
 const table = z.object({
   type: z.literal('table'),
   title: z.string().min(1),
@@ -79,7 +88,7 @@ export const PlanSchema = z.object({
   lang: z.enum(['cpp', 'elixir']).optional(),
   // Video color theme; light when omitted.
   theme: z.enum(['dark', 'light']).optional(),
-  scenes: z.array(z.discriminatedUnion('type', [title, flow, code, tests, checklist, mermaid, table, terminal])),
+  scenes: z.array(z.discriminatedUnion('type', [title, flow, code, tests, checklist, mermaid, table, terminal, clip])),
 });
 
 export type Plan = z.infer<typeof PlanSchema>;
@@ -88,6 +97,7 @@ export type CodeScene = z.infer<typeof code>;
 export type MermaidScene = z.infer<typeof mermaid>;
 export type TableScene = z.infer<typeof table>;
 export type TerminalScene = z.infer<typeof terminal>;
+export type ClipScene = z.infer<typeof clip>;
 
 export function parsePlan(input: unknown): Plan {
   return PlanSchema.parse(input);

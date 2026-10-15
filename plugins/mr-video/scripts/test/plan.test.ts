@@ -254,3 +254,17 @@ describe('theme', () => {
     }
   });
 });
+
+describe('clip scenes', () => {
+  it('accepts a clip scene and keeps it on screen for the whole clip', async () => {
+    const {sceneSeconds} = await import('../src/timing.ts');
+    const p: any = samplePlan();
+    p.scenes.splice(1, 0, {type: 'clip', title: '결과 화면', file: 'clip.mp4', url: 'http://localhost:4000/hive', captions: ['저장하면', '목록에 바로 보입니다.']});
+    const plan = parsePlan(p);
+    expect(checkPlan(plan).errors).toEqual([]);
+    const clip: any = plan.scenes[1];
+    const reading = sceneSeconds(clip);
+    expect(sceneSeconds({...clip, clipSeconds: 1})).toBeCloseTo(reading); // short clip: reading time wins
+    expect(sceneSeconds({...clip, clipSeconds: 20})).toBeCloseTo(20.5); // long clip: clip + 0.5 s tail
+  });
+});

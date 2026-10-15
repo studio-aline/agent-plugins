@@ -109,3 +109,28 @@ describe('light theme', () => {
     console.error(`[light] sheet ${sheet}`);
   });
 });
+
+describe('clip scene', () => {
+  it('plays the recording inside the window and holds until it ends', {timeout: 300_000}, async () => {
+    const {execFileSync} = await import('node:child_process');
+    const {FFMPEG} = await import('../src/media.ts');
+    const {resolveClips} = await import('../src/clips.ts');
+    const {sceneSeconds} = await import('../src/timing.ts');
+    // 2 s white, then 2 s black: the frame tells how far the recording has played.
+    execFileSync(FFMPEG, ['-v', 'error', '-y', '-f', 'lavfi', '-i', 'color=c=white:s=1280x720:r=30:d=2', '-f', 'lavfi', '-i', 'color=c=black:s=1280x720:r=30:d=2',
+      '-filter_complex', '[0][1]concat=n=2:v=1:a=0', '-pix_fmt', 'yuv420p', '-c:v', 'libx264', join(out, 'web.mp4')]);
+    const raw: any = samplePlan();
+    raw.scenes = [raw.scenes[0], {type: 'clip', title: '결과 화면', file: 'web.mp4', url: 'http://localhost:4000/hive', captions: ['저장하면 목록에 바로 보입니다.']}];
+    const plan = resolveClips(parsePlan(raw), out);
+    const r = await renderPlan(plan, join(out, 'clip-scene.mp4'));
+    expect(r.qa.problems).toEqual([]);
+
+    const start = sceneSeconds(plan.scenes[0]);
+    expect(sceneSeconds(plan.scenes[1])).toBeGreaterThanOrEqual(4);
+    const early = regionLuma(r.video, start + 1, 540, 330, 200, 100);
+    const late = regionLuma(r.video, start + 3.5, 540, 330, 200, 100);
+    console.error(`[clip] early=${early.toFixed(1)} late=${late.toFixed(1)}`);
+    expect(early).toBeGreaterThan(200);
+    expect(late).toBeLessThan(40);
+  });
+});
