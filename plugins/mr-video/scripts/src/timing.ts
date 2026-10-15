@@ -19,7 +19,10 @@ interface Timed {
   type?: string;
   captions: string[];
   lines?: {cmd: string; out?: string}[];
+  clipSeconds?: number; // filled in Node by resolveClips
 }
+
+const CLIP_TAIL = 0.5;
 
 /** How long caption i holds: its reading time, or longer if the commands typed during it need it. */
 export function holdSeconds(scene: Timed, i: number): number {
@@ -32,8 +35,16 @@ export function holdSeconds(scene: Timed, i: number): number {
   return typing === 0 ? read : Math.max(read, typing + READ_AFTER_TYPING);
 }
 
+/** Hold of caption i, with a clip scene's last caption stretched so the whole recording plays. */
+export function sceneHold(scene: Timed, i: number): number {
+  const base = holdSeconds(scene, i);
+  if (scene.type !== 'clip' || !scene.clipSeconds || i !== scene.captions.length - 1) return base;
+  const before = scene.captions.slice(0, -1).reduce((sum, _, j) => sum + holdSeconds(scene, j), 0);
+  return Math.max(base, scene.clipSeconds + CLIP_TAIL - before);
+}
+
 export function sceneSeconds(scene: Timed): number {
-  return scene.captions.reduce((sum, _, i) => sum + holdSeconds(scene, i), 0);
+  return scene.captions.reduce((sum, _, i) => sum + sceneHold(scene, i), 0);
 }
 
 export function planSeconds(plan: {scenes: Timed[]}): number {

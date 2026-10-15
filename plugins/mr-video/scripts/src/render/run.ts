@@ -1,5 +1,5 @@
 import {renderVideo} from '@revideo/renderer';
-import {rmSync, statSync} from 'node:fs';
+import {copyFileSync, mkdirSync, rmSync, statSync} from 'node:fs';
 import {resolve} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {encodePlan} from '../codec.ts';
@@ -8,9 +8,11 @@ import type {Plan} from '../plan.ts';
 import {planSeconds, sceneSeconds} from '../timing.ts';
 import {type DiagramFrames, emphasisSteps} from '../diagram.ts';
 import {renderDiagrams} from './mermaid.ts';
-import type {RenderPlan} from './types.ts';
+import type {ClipAsset, RenderPlan} from './types.ts';
 
 const PKG_ROOT = fileURLToPath(new URL('../..', import.meta.url));
+// Vite serves PKG_ROOT/public at the site root; recordings are copied there for one render.
+const CLIP_DIR = 'mr-video-clips';
 
 export interface RenderResult {
   video: string;
@@ -27,14 +29,17 @@ export async function renderPlan(plan: Plan, outFile: string): Promise<RenderRes
   const started = Date.now();
   const prevCwd = process.cwd();
   // Before touching console/cwd: a mermaid syntax error must not leave them changed.
-  const browserPlan: RenderPlan = {...plan, diagrams: await prepareDiagrams(plan)};
+  const diagrams = await prepareDiagrams(plan);
+  const tag = `render-${process.pid}-${Date.now()}`;
+  const files: string[] = [];
   // Revideo resolves projectFile against cwd and logs with console.log/info; keep stdout for our JSON.
   const {log, info} = console;
   console.log = console.info = (...a: unknown[]) => console.error(...a);
   process.chdir(PKG_ROOT);
-  const name = `render-${process.pid}-${Date.now()}.mp4` as const;
+  const name = `${tag}.mp4` as const;
   const raw = resolve(PKG_ROOT, 'output', name); // Revideo's default outDir; removed even if rendering fails
   try {
+    const browserPlan: RenderPlan = {...plan, diagrams, clips: prepareClips(plan, tag, files)};
     await renderVideo({
       projectFile: './src/render/project.ts',
       variables: {plan: encodePlan(browserPlan)},
@@ -50,6 +55,7 @@ export async function renderPlan(plan: Plan, outFile: string): Promise<RenderRes
     postprocess(raw, out);
   } finally {
     rmSync(raw, {force: true});
+    for (const f of files) rmSync(f, {force: true});
     process.chdir(prevCwd);
     console.log = log;
     console.info = info;
@@ -64,6 +70,26 @@ export async function renderPlan(plan: Plan, outFile: string): Promise<RenderRes
     renderSeconds: (Date.now() - started) / 1000,
     qa,
   };
+}
+
+/**
+ * Copy each clip scene's recording where the render server can serve it. The plan must have gone
+ * through resolveClips. Copied paths go into `files` (before copying) so the caller can remove them.
+ */
+function prepareClips(plan: Plan, tag: string, files: string[]): Record<number, ClipAsset> {
+  const clips: Record<number, ClipAsset> = {};
+  for (const [i, s] of plan.scenes.entries()) {
+    if (s.type !== 'clip') continue;
+    const c = s as typeof s & {clipWidth?: number; clipHeight?: number; clipSeconds?: number};
+    if (!c.clipSeconds || !c.clipWidth || !c.clipHeight) throw new Error(`scenes[${i}](clip): 녹화 파일 정보가 없습니다(resolveClips를 거치지 않음)`);
+    const name = `${tag}-${i}.mp4`;
+    const dest = resolve(PKG_ROOT, 'public', CLIP_DIR, name);
+    mkdirSync(resolve(PKG_ROOT, 'public', CLIP_DIR), {recursive: true});
+    files.push(dest);
+    copyFileSync(s.file, dest);
+    clips[i] = {src: `/${CLIP_DIR}/${name}`, width: c.clipWidth, height: c.clipHeight};
+  }
+  return clips;
 }
 
 /** Rasterize every mermaid scene (one picture per emphasis step), keyed by scene index. */

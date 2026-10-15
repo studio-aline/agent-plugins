@@ -4,6 +4,7 @@ import {homedir} from 'node:os';
 import {dirname, join, resolve} from 'node:path';
 import {parseArgs} from 'node:util';
 import {ZodError} from 'zod';
+import {resolveClips} from './clips.ts';
 import {checkGrounding} from './grounding.ts';
 import {contactSheet} from './media.ts';
 import {buildBlock, inspectBody, sameBody, slug, upsertBlock, videoFileName} from './mr-body.ts';
@@ -18,6 +19,8 @@ const USAGE = `mr-video — GitLab MR 설명 영상 만들기
   mr-video validate <plan.json> [--repo <dir>]
   mr-video render <plan.json> [--out <video.mp4>]
   mr-video preview <video.mp4> <plan.json> [--out <preview.png>]
+  mr-video record <steps.json> [--out <clip.mp4>]      (localhost 웹 화면 녹화 → clip 장면용 mp4)
+  mr-video login-window --url <http://localhost:...>   (녹화용 브라우저 창을 열어 사용자가 직접 로그인, 창을 닫거나 9분이 지나면 종료)
   mr-video upload <video.mp4> --project <group/repo>      (GITLAB_HOST, GITLAB_TOKEN 필요)
   mr-video description --project <group/repo> --iid <N> --out <body.md>   (MR 본문을 바이트 그대로 저장)
   mr-video save-description --project <group/repo> --iid <N> --current <body.md>   (GitLab MCP가 없는 호스트용: 본문 저장 후 대조)
@@ -44,8 +47,13 @@ function env(name: 'GITLAB_HOST' | 'GITLAB_TOKEN'): string {
   }
 }
 
-function readPlan(file: string): Plan {
+function parsePlanFile(file: string): Plan {
   return parsePlan(JSON.parse(readFileSync(file, 'utf8')));
+}
+
+/** The plan with its clip recordings located (next to plan.json) and measured. */
+function readPlan(file: string): Plan {
+  return resolveClips(parsePlanFile(file), dirname(resolve(file)));
 }
 
 function formatZod(e: ZodError): string[] {
@@ -65,6 +73,7 @@ async function main(argv: string[]): Promise<number> {
       current: {type: 'string'},
       upload: {type: 'string'},
       plan: {type: 'string'},
+      url: {type: 'string'},
       inspect: {type: 'boolean'},
       help: {type: 'boolean', short: 'h'},
     },
@@ -89,13 +98,19 @@ async function main(argv: string[]): Promise<number> {
       if (!file) throw new Error('plan.json 경로가 필요합니다');
       let plan: Plan;
       try {
-        plan = readPlan(file);
+        plan = parsePlanFile(file);
       } catch (e) {
         if (e instanceof ZodError) {
           print({ok: false, errors: formatZod(e), warnings: []});
           return 1;
         }
         throw e;
+      }
+      try {
+        plan = resolveClips(plan, dirname(resolve(file)));
+      } catch (e) {
+        print({ok: false, errors: [(e as Error).message], warnings: []});
+        return 1;
       }
       const structure = checkPlan(plan);
       const grounding = checkGrounding(plan, resolve(o.repo ?? process.cwd()));
@@ -128,6 +143,36 @@ async function main(argv: string[]): Promise<number> {
       const out = resolve(o.out ?? join(dirname(resolve(video)), 'preview.png'));
       contactSheet(resolve(video), sceneEndTimes(readPlan(file)), out);
       print({preview: out});
+      return 0;
+    }
+
+    case 'record': {
+      const [file] = args;
+      if (!file) throw new Error('steps.json 경로가 필요합니다');
+      const {parseSteps} = await import('./record/steps.ts');
+      let steps;
+      try {
+        steps = parseSteps(JSON.parse(readFileSync(file, 'utf8')));
+      } catch (e) {
+        if (e instanceof ZodError) {
+          print({ok: false, errors: formatZod(e)});
+          return 1;
+        }
+        throw e;
+      }
+      const {recordSteps} = await import('./record/record.ts');
+      // A relative --out sits next to steps.json (the workdir), like clip paths in plan.json.
+      const out = o.out ? resolve(dirname(resolve(file)), o.out) : resolve(file).replace(/.json$/i, '') + '.mp4';
+      const r = await recordSteps(steps, out);
+      print(r);
+      return r.ok ? 0 : 1;
+    }
+
+    case 'login-window': {
+      if (!o.url) throw new Error('--url 이 필요합니다');
+      const {openLoginWindow} = await import('./record/record.ts');
+      const how = await openLoginWindow(o.url);
+      print({ok: true, closedBy: how === 'closed' ? 'user' : 'timeout'});
       return 0;
     }
 

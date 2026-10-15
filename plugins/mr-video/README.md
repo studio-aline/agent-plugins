@@ -18,12 +18,14 @@ Codex(`$mr-video`)에서 "MR에 설명 영상 넣어줘"라고 하면, 변경 �
    본문 저장은 GitLab MCP가 있으면 MCP로, 없으면(Codex) `save-description`(GitLab API)으로 한다.
 
 장면 종류: `title` · `flow` · `mermaid`(노드 강조, 강조한 곳으로 화면 이동) · `code`(before → after 모핑) ·
-`table`(수정 전/후, 설계 결정 비교) · `terminal` · `tests` · `checklist`.
+`table`(수정 전/후, 설계 결정 비교) · `terminal` · `tests` · `checklist` · `clip`(웹 화면 녹화).
 
 - 테마: 기본은 라이트. 요청 뒤에 `dark`를 붙이면 다크로 그린다(`/mr-video:mr-video dark`, `$mr-video dark`).
 - 구조·흐름이 바뀐 MR은 mermaid 다이어그램을 적극적으로 쓴다(본문에 없으면 코드에서 직접 그림).
 - `.uasset`·`.umap`이 바뀌면 VibeUE로 블루프린트·위젯을 읽어 변경 전/후를 mermaid로 비교한다.
   에디터가 꺼져 있거나 비교할 수 없으면 그 사실을 영상에 밝힌다.
+- 웹 기능을 바꾼 MR이면 실행 중인 localhost 개발 서버에서 바뀐 기능을 써 보는 화면을 녹화해 넣는다.
+  mr-video 전용 브라우저 프로필을 쓰고, 로그인은 개발용 수단을 찾거나 사용자가 직접 로그인할 창을 연다.
 
 ## 요구 사항
 
@@ -43,6 +45,8 @@ Codex(`$mr-video`)에서 "MR에 설명 영상 넣어줘"라고 하면, 변경 �
 | `validate plan.json --repo <dir>` | 스키마·길이·근거(base/head 파일 대조) 검사 |
 | `render plan.json` | mermaid PNG 준비 + 렌더 + 후처리 + QA |
 | `preview video.mp4 plan.json` | 장면별 프레임 시트 `preview.png` |
+| `record steps.json --out clip.mp4` | localhost 웹 화면을 스크립트대로 조작하며 녹화(1280×720 mp4) |
+| `login-window --url <localhost 주소>` | 녹화용 프로필로 브라우저 창을 열어 사용자가 직접 로그인 |
 | `upload video.mp4 --project p` | GitLab 업로드 → markdown/url |
 | `description --project p --iid N --out body.md` | MR 본문을 API로 바이트 그대로 저장 (+ head·diff base SHA) |
 | `body --current body.md --upload upload.json --plan plan.json` | MR 본문에 마커 블록 삽입/교체 |
@@ -68,3 +72,7 @@ npx tsx tools\readme-media.mts     # README 영상·GIF 다시 만들기 (docs/m
 - mermaid의 HTML 라벨(`<br/>`)은 canvas를 오염시키므로 Chromium에서 PNG로 미리 그린다.
 - 렌더할 때 Revideo 텔레메트리를 끈다(`DISABLE_TELEMETRY=true`).
 - 업로드한 영상 URL은 브라우저 로그인 세션으로만 열린다.
+- 녹화용 브라우저 프로필은 `%LOCALAPPDATA%\mr-video\browser-profile`에 있다. `login-window` 창이 열려 있는 동안에는
+  `record`가 같은 프로필을 쓸 수 없다(창은 사용자가 닫거나 9분이 지나면 닫힌다).
+- 녹화 중에는 팝업·새 탭을 막고, 어느 프레임이든 localhost 밖 문서로 이동하면 녹화를 중단한다.
+- 화면 녹화(screencast)는 화면이 바뀔 때만 프레임을 받으므로, 페이지에 보이지 않는 1px 요소를 매 프레임 바꿔 마지막 화면까지 녹화한다.
