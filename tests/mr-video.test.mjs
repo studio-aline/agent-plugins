@@ -25,7 +25,7 @@ test("mr-video is registered for Claude Code and Codex with aligned manifests", 
   const codexManifest = JSON.parse(fs.readFileSync(path.join(plugin, ".codex-plugin", "plugin.json"), "utf8"));
   assert.equal(claudeManifest.name, "mr-video");
   assert.equal(codexManifest.name, claudeManifest.name);
-  assert.equal(claudeManifest.version, "0.2.2");
+  assert.equal(claudeManifest.version, "0.2.3");
   assert.equal(codexManifest.version, claudeManifest.version);
   assert.equal(codexManifest.skills, "./skills/");
   assert.equal(codexManifest.description, claudeManifest.description);
@@ -71,6 +71,14 @@ test("mr-video keeps the latest video in the description and every render as a n
   assert.match(skill, /기존 코멘트는 고치지 않고 \*\*언제나 새 코멘트\*\*/u);
   // Same rule as the description: MCP when the host has one, the CLI otherwise.
   assert.match(skill, /GitLab MCP가 있으면\*\* `note\.md`[\s\S]*?MRV post-note/u);
+});
+
+test("mr-video lets hosts without a GitLab MCP publish in one command", () => {
+  assert.match(skill, /GitLab MCP가 없고 MR이 이미 있으면[\s\S]*?MRV publish --project <p> --iid N --plan plan\.json \[--delta-plan plan\.delta\.json\]/u);
+  assert.match(skill, /"skipped":"same-head"/u);
+  const cli = fs.readFileSync(path.join(plugin, "scripts", "src", "cli.ts"), "utf8");
+  assert.match(cli, /case 'publish':/u);
+  assert.match(cli, /'delta-plan': \{type: 'string'\}/u);
 });
 
 test("mr-video is excluded from Antigravity and the exclusion is documented", () => {
