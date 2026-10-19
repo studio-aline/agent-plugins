@@ -3,7 +3,7 @@ import {mkdtempSync, writeFileSync} from 'node:fs';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {afterAll, beforeAll, describe, expect, it} from 'vitest';
-import {getDescription, saveDescription, uploadVideo} from '../src/upload.ts';
+import {getDescription, postNote, saveDescription, uploadVideo} from '../src/upload.ts';
 
 let server: Server;
 let host = '';
@@ -112,5 +112,32 @@ describe('saveDescription', () => {
     expect(seen.token).toBe('tok');
     expect(JSON.parse(seen.body!)).toEqual({description: body});
     expect(r).toEqual({iid: 7, webUrl: 'https://g/x/-/merge_requests/7', description: body});
+  });
+});
+
+describe('postNote', () => {
+  it('POSTs the note as JSON and returns its link and stored body', async () => {
+    let seen: {method?: string; url?: string; token?: string; body?: string} = {};
+    const mock = createServer(async (req, res) => {
+      seen = {method: req.method, url: req.url, token: req.headers['private-token'] as string, body: Buffer.from(await read(req), 'latin1').toString('utf8')};
+      res.writeHead(201, {'content-type': 'application/json'});
+      res.end(JSON.stringify({id: 42, body: JSON.parse(seen.body!).body}));
+    });
+    await new Promise<void>(r => mock.listen(0, '127.0.0.1', r));
+    const addr = mock.address();
+    const h = addr && typeof addr === 'object' ? `http://127.0.0.1:${addr.port}` : '';
+    const body = '<!-- mr-video:note -->\n## 🎬 설명 영상 기록 · 변경분\n`a` "b"';
+    const r = await postNote({host: h, token: 'tok', project: 'group/project', iid: 7, body});
+    mock.close();
+    expect(seen.method).toBe('POST');
+    expect(seen.url).toBe('/api/v4/projects/group%2Fproject/merge_requests/7/notes');
+    expect(seen.token).toBe('tok');
+    expect(JSON.parse(seen.body!)).toEqual({body});
+    expect(r).toEqual({id: 42, webUrl: `${h}/group/project/-/merge_requests/7#note_42`, body});
+  });
+
+  it('reports a rejected note with its status', async () => {
+    status = 403;
+    await expect(postNote({host, token: 't', project: 'g/p', iid: 1, body: 'x'})).rejects.toThrow(/코멘트 작성 실패\(403\)/);
   });
 });

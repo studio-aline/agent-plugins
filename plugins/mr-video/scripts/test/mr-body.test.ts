@@ -1,5 +1,5 @@
 import {describe, expect, it} from 'vitest';
-import {buildBlock, inspectBody, sameBody, upsertBlock, videoFileName} from '../src/mr-body.ts';
+import {buildBlock, buildNote, inspectBody, sameBody, upsertBlock, videoFileName} from '../src/mr-body.ts';
 
 const block = buildBlock({url: '/uploads/abc/mr-1-abc1234.mp4', sha7: 'abc1234', seconds: 52.4});
 
@@ -88,5 +88,29 @@ describe('sameBody', () => {
   it('ignores CRLF, BOM and trailing whitespace only', () => {
     expect(sameBody('a\r\nb\r\n', '\uFEFFa\nb')).toEqual({same: true});
     expect(sameBody('a\nb', 'a\nc')).toEqual({same: false, line: 2});
+  });
+});
+
+describe('buildNote', () => {
+  it('records a full render with its head sha', () => {
+    expect(buildNote({url: '/uploads/abc/mr-1-abc1234.mp4', base7: 'base000', sha7: 'abc1234', seconds: 52.4})).toBe(
+      [
+        '<!-- mr-video:note -->',
+        '## 🎬 설명 영상 기록 · MR 전체',
+        '![설명 영상 · abc1234](/uploads/abc/mr-1-abc1234.mp4)',
+        '> `abc1234` 기준 MR 전체 · 52초 · 자막 전용 · mr-video 생성 · 최신 전체 영상은 MR 본문',
+      ].join('\n'),
+    );
+  });
+
+  it('records a delta render with its range', () => {
+    const note = buildNote({url: '/u/x.mp4', base7: 'abc1234', sha7: 'def5678', seconds: 20, voice: true, delta: true});
+    expect(note).toContain('## 🎬 설명 영상 기록 · 변경분');
+    expect(note).toContain('> `abc1234`..`def5678` 변경분 · 20초 · 자막 + 음성 ·');
+  });
+
+  it('is not a description block', () => {
+    const note = buildNote({url: '/u/x.mp4', base7: 'abc1234', sha7: 'def5678', seconds: 20});
+    expect(inspectBody(note)).toEqual({hasBlock: false});
   });
 });

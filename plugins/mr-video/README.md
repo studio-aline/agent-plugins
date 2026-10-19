@@ -2,7 +2,8 @@
 
 GitLab MR에 넣을 **자막 설명 영상**(요청하면 음성 포함)을 만드는 플러그인. Claude Code(`/mr-video:mr-video`)나
 Codex(`$mr-video`)에서 "MR에 설명 영상 넣어줘"라고 하면, 변경 내용과 MR 본문을 읽고 영상을 만들어
-**MR 본문 맨 위에** 넣는다.
+**MR 본문 맨 위에** 넣는다. 본문 영상은 다시 만들 때마다 최신으로 교체되고, 렌더할 때마다 영상을
+**MR 코멘트로도 남겨** 기록을 쌓는다(다시 만들 때는 직전 영상 이후 변경분만 설명하는 영상).
 
 ![mr-video 예시 출력: 동작 경로 → 코드 변경 장면](../../docs/media/mr-video/demo.gif)
 
@@ -16,6 +17,8 @@ Codex(`$mr-video`)에서 "MR에 설명 영상 넣어줘"라고 하면, 변경 �
 3. `render`가 mermaid를 PNG로 그리고 Revideo(headless Chromium)로 렌더한 뒤, 인코딩된 MP4를 QA한다.
 4. `upload`로 GitLab에 올리고, MR 본문의 마커 블록만 교체한다. 저장 후 본문을 바이트 단위로 대조한다.
    본문 저장은 GitLab MCP가 있으면 MCP로, 없으면(Codex) `save-description`(GitLab API)으로 한다.
+5. `note`로 기록 코멘트를 만들어 MR에 새 코멘트로 단다. 처음엔 본문과 같은 영상, 다시 만들 때는
+   직전 영상 head..현재 head 변경분 영상. GitLab MCP가 없으면 `post-note`(GitLab API)로 단다.
 
 장면 종류: `title` · `flow` · `mermaid`(노드 강조, 강조한 곳으로 화면 이동) · `code`(before → after 모핑) ·
 `table`(수정 전/후, 설계 결정 비교) · `terminal` · `tests` · `checklist` · `clip`(웹 화면 녹화).
@@ -55,6 +58,8 @@ Codex(`$mr-video`)에서 "MR에 설명 영상 넣어줘"라고 하면, 변경 �
 | `description --project p --iid N --out body.md` | MR 본문을 API로 바이트 그대로 저장 (+ head·diff base SHA) |
 | `body --current body.md --upload upload.json --plan plan.json` | MR 본문에 마커 블록 삽입/교체 |
 | `save-description --project p --iid N --current body.md` | GitLab MCP가 없는 호스트용 본문 저장 + 대조 |
+| `note --upload upload.json --plan plan.json [--delta]` | 기록 코멘트 본문 (`--delta`는 변경분 영상) |
+| `post-note --project p --iid N --current note.md` | GitLab MCP가 없는 호스트용 코멘트 작성 + 대조 |
 | `same a.md b.md` | 저장 전후 본문 대조(CRLF·BOM·끝 공백만 무시) |
 
 ## 개발

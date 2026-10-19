@@ -25,7 +25,7 @@ test("mr-video is registered for Claude Code and Codex with aligned manifests", 
   const codexManifest = JSON.parse(fs.readFileSync(path.join(plugin, ".codex-plugin", "plugin.json"), "utf8"));
   assert.equal(claudeManifest.name, "mr-video");
   assert.equal(codexManifest.name, claudeManifest.name);
-  assert.equal(claudeManifest.version, "0.2.1");
+  assert.equal(claudeManifest.version, "0.2.2");
   assert.equal(codexManifest.version, claudeManifest.version);
   assert.equal(codexManifest.skills, "./skills/");
   assert.equal(codexManifest.description, claudeManifest.description);
@@ -62,6 +62,15 @@ test("mr-video skill keeps its safety rules", () => {
   assert.match(skill, /실행하지 않은 테스트를 통과했다고 쓰지 않는다/u);
   // Hosts without a GitLab MCP (Codex) save through the CLI instead of inventing a route.
   assert.match(skill, /GitLab MCP가 있으면[\s\S]*?MRV save-description/u);
+});
+
+test("mr-video keeps the latest video in the description and every render as a new comment", () => {
+  assert.match(skill, /본문 영상은 항상 최신/u);
+  assert.match(skill, /plan\.delta\.json/u);
+  assert.match(skill, /MRV note --upload upload\.delta\.json --plan plan\.delta\.json --delta/u);
+  assert.match(skill, /기존 코멘트는 고치지 않고 \*\*언제나 새 코멘트\*\*/u);
+  // Same rule as the description: MCP when the host has one, the CLI otherwise.
+  assert.match(skill, /GitLab MCP가 있으면\*\* `note\.md`[\s\S]*?MRV post-note/u);
 });
 
 test("mr-video is excluded from Antigravity and the exclusion is documented", () => {
