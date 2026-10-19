@@ -90,7 +90,9 @@ and command namespaces, such as `guidance`, `/codex:*`, and `/git:*`.
 ### `mr-video`
 
 - `/mr-video:mr-video` — render a subtitled explainer video of the author's
-  own GitLab MR change and embed it at the top of the MR description. Runs only
+  own GitLab MR change and keep the latest one at the top of the MR description.
+  Each render is also posted as an MR comment for history; a re-render posts a
+  video of only the changes since the previous one. Runs only
   when explicitly requested. Add `dark` for the dark theme (light by default)
   and `voice` for Korean narration with the built-in Windows voice.
 - Uses the MR description as primary material: mermaid diagrams (with

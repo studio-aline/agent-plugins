@@ -1,12 +1,16 @@
 ---
 name: mr-video
-description: Render a subtitled explainer video of the author's own GitLab MR change and embed it at the top of the MR description. Use only when the user explicitly asks to put an explainer video into an MR (e.g. "/mr-video", "$mr-video", "MR에 설명 영상 넣어줘", "MR 올리면서 영상도").
+description: Render a subtitled explainer video of the author's own GitLab MR change and embed it at the top of the MR description, keeping every render as an MR comment for history. Use only when the user explicitly asks to put an explainer video into an MR (e.g. "/mr-video", "$mr-video", "MR에 설명 영상 넣어줘", "MR 올리면서 영상도").
 ---
 
 # mr-video: MR 설명 영상
 
 작성자가 **자신이 변경·구현한 내용**을 동료 프로그래머에게 설명하는 자막 영상(기본은 음성 없음, 요청하면 음성 포함)을 만들어
 MR 본문 맨 위에 넣는다. 명시적으로 요청받았을 때만 실행하고, 요청받으면 **확인 없이 끝까지** 진행한다.
+
+- **본문 영상은 항상 최신**이다. 리뷰어는 본문 영상을 보고 리뷰하므로, 다시 만들 때마다 MR 전체(MR 기준..head)를 설명하는 영상으로 교체한다.
+- **코멘트는 기록**이다. 렌더할 때마다 영상을 MR에 새 코멘트로 남긴다. 처음에는 본문과 같은 영상을,
+  이미 영상이 있던 MR을 다시 만들 때는 **직전 영상 이후 변경분**(직전 영상 head..head)만 설명하는 영상을 따로 만들어 단다.
 
 ## CLI
 
@@ -40,22 +44,28 @@ MR 본문 맨 위에 넣는다. 명시적으로 요청받았을 때만 실행하
    - MR이 이미 있으면 `MRV description --project <p> --iid N --out body.md`. 출력의 `baseSha`(MR diff 기준)를
      `base`로, `sha`를 head로 쓰고 로컬 HEAD와 같은지 확인한다.
      `MRV body --current body.md --inspect`로 기존 영상 SHA를 확인한다. 같은 head면 다시 만들지 않고 알린다.
+   - 기존 영상 SHA(`prev`)가 있고 head와 다르면 **갱신 라운드**다. `git rev-parse <prev>`로 전체 SHA를 얻는다.
+     그 커밋이 없으면(강제 푸시 등) 갱신 라운드로 보지 않고 처음 만들 때처럼 진행한다.
 
 2. **근거 수집**: `git diff base..head`, 바뀐 함수 전체, MR 본문, 이 세션에서 **실제로 실행한** 테스트와 결과.
    실행하지 않은 테스트를 통과했다고 쓰지 않는다.
 
 3. **plan 작성**: `MRV workdir --project <p> (--iid N | --branch B)`가 준 폴더에 `plan.json`을 쓴다.
-   스키마는 `MRV schema`.
+   스키마는 `MRV schema`. `plan.json`은 언제나 MR 전체(`base`..`head`)를 설명한다.
+   - 갱신 라운드면 `plan.delta.json`도 쓴다: `mr.base` = `prev` 전체 SHA, `mr.head` = head.
+     이번에 추가·변경된 것만 3~6장면으로, 수정 전/후 비교 위주로 설명한다 (`git diff prev..head`가 근거).
 
-4. **검증**: `MRV validate <plan.json> --repo <레포 루트>`. 실패하면 오류대로 고쳐서 최대 3회 재시도,
+4. **검증**: `MRV validate <plan.json> --repo <레포 루트>` (갱신 라운드면 `plan.delta.json`도). 실패하면 오류대로 고쳐서 최대 3회 재시도,
    그래도 실패하면 오류를 보고하고 멈춘다.
 
-5. **렌더**: `MRV render <plan.json>` (분당 20~40초). `ok:false`면 `qa.problems`를 보고하고 멈춘다.
+5. **렌더**: `MRV render <plan.json>` (분당 20~40초). 갱신 라운드면 `MRV render plan.delta.json --out delta.mp4`도
+   (기본 파일 이름이 같아 `--out`으로 나눈다). `ok:false`면 `qa.problems`를 보고하고 멈춘다.
 
 6. **자체 확인**: `MRV preview <video> <plan.json>`이 만든 `preview.png` 이미지를 직접 열어 본다.
    글자 겹침·잘림·빈 장면이 있으면 plan을 고쳐 4번부터 다시 한다.
 
 7. **업로드**: `MRV upload <video> --project <p>` → 결과 JSON을 `upload.json`으로 저장.
+   갱신 라운드면 변경분 영상도 올려 `upload.delta.json`으로 저장한다.
 
 8. **MR 본문 반영** (본문은 한 글자도 손으로 고치지 않는다)
    - 기존 MR은 1번의 `body.md`, 새 MR은 직접 쓴 설명 초안을 `body.md`로 쓴다.
@@ -71,7 +81,15 @@ MR 본문 맨 위에 넣는다. 명시적으로 요청받았을 때만 실행하
      다르면 `body.new.md`로 한 번 더 저장하고, 그래도 다르면 다른 줄 번호와 함께 사용자에게 보고한다.
    - 저장이 실패하면 `body.new.md`의 마커 블록을 출력해 사용자가 붙여넣을 수 있게 한다.
 
-9. **보고**: MR 링크, 영상 길이, 기준 SHA(7자리), 경고가 있었다면 그 내용.
+9. **기록 코멘트** (본문 반영으로 MR이 저장된 뒤. 기존 코멘트는 고치지 않고 **언제나 새 코멘트**를 단다)
+   - 처음 만들 때: `MRV note --upload upload.json --plan plan.json --out note.md` (본문과 같은 영상)
+   - 갱신 라운드: `MRV note --upload upload.delta.json --plan plan.delta.json --delta --out note.md` (변경분 영상)
+   - 저장:
+     - **GitLab MCP가 있으면** `note.md`를 읽어 MR 코멘트 도구(예: `save_note`)의 `body`에 그대로 넣는다.
+     - **없으면** `MRV post-note --project <p> --iid N --current note.md` (작성 결과를 대조해 `ok`를 낸다).
+   - 코멘트가 실패해도 본문 반영은 되돌리지 않는다. 실패 사실을 보고한다.
+
+10. **보고**: MR 링크, 영상 길이, 기준 SHA(7자리), 기록 코멘트 링크(갱신 라운드면 변경분 범위), 경고가 있었다면 그 내용.
 
 업로드 성공 전에는 MR을 건드리지 않는다. 마커 블록 밖의 본문은 절대 바꾸지 않는다.
 

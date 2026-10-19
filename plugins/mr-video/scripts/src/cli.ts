@@ -8,10 +8,10 @@ import {resolveClips} from './clips.ts';
 import {resolveVoice} from './voice.ts';
 import {checkGrounding} from './grounding.ts';
 import {contactSheet} from './media.ts';
-import {buildBlock, inspectBody, sameBody, slug, upsertBlock, videoFileName} from './mr-body.ts';
+import {buildBlock, buildNote, inspectBody, sameBody, slug, upsertBlock, videoFileName} from './mr-body.ts';
 import {checkPlan, parsePlan, planJsonSchema, type Plan} from './plan.ts';
 import {planSeconds} from './timing.ts';
-import {getDescription, saveDescription, uploadVideo} from './upload.ts';
+import {getDescription, postNote, saveDescription, uploadVideo} from './upload.ts';
 
 const USAGE = `mr-video — GitLab MR 설명 영상 만들기
 
@@ -27,6 +27,8 @@ const USAGE = `mr-video — GitLab MR 설명 영상 만들기
   mr-video save-description --project <group/repo> --iid <N> --current <body.md>   (GitLab MCP가 없는 호스트용: 본문 저장 후 대조)
   mr-video body [--current <body.md>] --inspect
   mr-video body [--current <body.md>] --upload <upload.json> --plan <plan.json> [--out <body.md>]
+  mr-video note --upload <upload.json> --plan <plan.json> [--delta] [--out <note.md>]   (영상 기록 코멘트 본문, --delta는 직전 영상 이후 변경분)
+  mr-video post-note --project <group/repo> --iid <N> --current <note.md>   (GitLab MCP가 없는 호스트용: 코멘트 작성 후 대조)
   mr-video same <a.md> <b.md>      (CRLF·BOM·끝 공백만 무시하고 같은지 비교, 다르면 종료 코드 1)
 
 모든 결과는 stdout에 JSON(body 명령은 본문 텍스트)으로 출력합니다. 오류는 {"ok":false,"error":...}.`;
@@ -77,6 +79,7 @@ async function main(argv: string[]): Promise<number> {
       plan: {type: 'string'},
       url: {type: 'string'},
       inspect: {type: 'boolean'},
+      delta: {type: 'boolean'},
       help: {type: 'boolean', short: 'h'},
     },
   });
@@ -229,6 +232,33 @@ async function main(argv: string[]): Promise<number> {
       if (o.out) writeFileSync(o.out, body);
       else process.stdout.write(body);
       return 0;
+    }
+
+    case 'note': {
+      if (!o.upload || !o.plan) throw new Error('--upload 와 --plan 이 필요합니다');
+      const upload = JSON.parse(readFileSync(o.upload, 'utf8')) as {url?: unknown};
+      if (typeof upload.url !== 'string' || !upload.url) throw new Error(`${o.upload}에 url이 없습니다 (upload 명령의 출력이어야 합니다)`);
+      const plan = readPlan(o.plan);
+      const note = buildNote({
+        url: upload.url,
+        base7: plan.mr.base.slice(0, 7),
+        sha7: plan.mr.head.slice(0, 7),
+        seconds: planSeconds(plan),
+        voice: plan.voice,
+        delta: o.delta,
+      });
+      if (o.out) writeFileSync(o.out, note);
+      else process.stdout.write(note);
+      return 0;
+    }
+
+    case 'post-note': {
+      if (!o.project || !o.iid || !o.current) throw new Error('--project, --iid, --current <note.md> 가 필요합니다');
+      const body = readFileSync(o.current, 'utf8');
+      const r = await postNote({host: env('GITLAB_HOST'), token: env('GITLAB_TOKEN'), project: o.project, iid: Number(o.iid), body});
+      const check = sameBody(body, r.body);
+      print({ok: check.same, id: r.id, webUrl: r.webUrl, ...(check.same ? {} : {differsAtLine: check.line})});
+      return check.same ? 0 : 1;
     }
 
     case 'same': {

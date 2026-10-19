@@ -13,6 +13,23 @@ export function buildBlock(o: {url: string; sha7: string; seconds: number; voice
   ].join('\n');
 }
 
+const NOTE = '<!-- mr-video:note -->';
+
+/**
+ * A history comment for one render. The description block is replaced on every render so
+ * reviewers always see the latest video; posting each render as a new note keeps the earlier
+ * ones reachable. `delta` marks a video that covers only base..head since the previous video.
+ */
+export function buildNote(o: {url: string; base7: string; sha7: string; seconds: number; voice?: boolean; delta?: boolean}): string {
+  const range = o.delta ? `\`${o.base7}\`..\`${o.sha7}\` 변경분` : `\`${o.sha7}\` 기준 MR 전체`;
+  return [
+    NOTE,
+    `## 🎬 설명 영상 기록 · ${o.delta ? '변경분' : 'MR 전체'}`,
+    `![설명 영상 · ${o.sha7}](${o.url})`,
+    `> ${range} · ${Math.round(o.seconds)}초 · ${o.voice ? '자막 + 음성' : '자막 전용'} · mr-video 생성 · 최신 전체 영상은 MR 본문`,
+  ].join('\n');
+}
+
 const stripBom = (s: string) => s.replace(/^﻿/, '');
 
 /** Replaces the existing marker block, or puts the block at the top. Everything else is kept as is. */

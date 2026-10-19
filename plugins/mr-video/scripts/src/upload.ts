@@ -54,6 +54,24 @@ export async function saveDescription(o: {host: string; token: string; project: 
   return {iid: mr.iid, webUrl: mr.web_url, description: mr.description ?? ''};
 }
 
+/**
+ * Adds a new MR note. Used when the host has no GitLab MCP (e.g. Codex); the caller passes the
+ * exact text produced by `note`.
+ */
+export async function postNote(o: {host: string; token: string; project: string; iid: number; body: string}): Promise<{id: number; webUrl: string; body: string}> {
+  if (!o.token) throw new Error('GITLAB_TOKEN 환경 변수가 비어 있습니다. api 스코프 PAT를 설정하세요.');
+  const base = apiBase(o.host);
+  const url = `${base}/api/v4/projects/${encodeURIComponent(o.project)}/merge_requests/${o.iid}/notes`;
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: {'PRIVATE-TOKEN': o.token, 'content-type': 'application/json'},
+    body: JSON.stringify({body: o.body}),
+  });
+  if (!res.ok) throw new Error(`MR 코멘트 작성 실패(${res.status}): ${o.project}!${o.iid} ${(await res.text()).slice(0, 200)}`);
+  const note = (await res.json()) as {id: number; body: string | null};
+  return {id: note.id, webUrl: `${base}/${o.project}/-/merge_requests/${o.iid}#note_${note.id}`, body: note.body ?? ''};
+}
+
 export async function uploadVideo({file, project, host, token}: UploadOptions): Promise<UploadResult> {
   if (!token) throw new Error('GITLAB_TOKEN 환경 변수가 비어 있습니다. api 스코프 PAT를 설정하세요.');
   if (!host) throw new Error('GITLAB_HOST 환경 변수가 비어 있습니다 (예: gitlab.example.com).');
