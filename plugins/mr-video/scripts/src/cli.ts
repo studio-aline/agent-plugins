@@ -11,6 +11,7 @@ import {contactSheet} from './media.ts';
 import {buildBlock, buildNote, inspectBody, sameBody, slug, upsertBlock, videoFileName} from './mr-body.ts';
 import {checkPlan, parsePlan, planJsonSchema, type Plan} from './plan.ts';
 import {planSeconds} from './timing.ts';
+import {publish} from './publish.ts';
 import {getDescription, postNote, saveDescription, uploadVideo} from './upload.ts';
 
 const USAGE = `mr-video — GitLab MR 설명 영상 만들기
@@ -29,6 +30,8 @@ const USAGE = `mr-video — GitLab MR 설명 영상 만들기
   mr-video body [--current <body.md>] --upload <upload.json> --plan <plan.json> [--out <body.md>]
   mr-video note --upload <upload.json> --plan <plan.json> [--delta] [--out <note.md>]   (영상 기록 코멘트 본문, --delta는 직전 영상 이후 변경분)
   mr-video post-note --project <group/repo> --iid <N> --current <note.md>   (GitLab MCP가 없는 호스트용: 코멘트 작성 후 대조)
+  mr-video publish --project <group/repo> --iid <N> --plan <plan.json> [--delta-plan <plan.delta.json>]
+                   (render → upload → 본문 영상 교체·대조 → 기록 코멘트·대조를 한 번에. GitLab MCP 없이 REST로 저장)
   mr-video same <a.md> <b.md>      (CRLF·BOM·끝 공백만 무시하고 같은지 비교, 다르면 종료 코드 1)
 
 모든 결과는 stdout에 JSON(body 명령은 본문 텍스트)으로 출력합니다. 오류는 {"ok":false,"error":...}.`;
@@ -77,6 +80,7 @@ async function main(argv: string[]): Promise<number> {
       current: {type: 'string'},
       upload: {type: 'string'},
       plan: {type: 'string'},
+      'delta-plan': {type: 'string'},
       url: {type: 'string'},
       inspect: {type: 'boolean'},
       delta: {type: 'boolean'},
@@ -259,6 +263,25 @@ async function main(argv: string[]): Promise<number> {
       const check = sameBody(body, r.body);
       print({ok: check.same, id: r.id, webUrl: r.webUrl, ...(check.same ? {} : {differsAtLine: check.line})});
       return check.same ? 0 : 1;
+    }
+
+    case 'publish': {
+      // The caller is an app that reads stdout: one JSON value on one line, errors included.
+      const line = (v: unknown) => process.stdout.write(`${JSON.stringify(v)}\n`);
+      try {
+        if (!o.project || !o.iid || !o.plan) throw new Error('--project, --iid, --plan 이 필요합니다');
+        const r = await publish(
+          {host: env('GITLAB_HOST'), token: env('GITLAB_TOKEN'), project: o.project, iid: Number(o.iid), plan: o.plan, deltaPlan: o['delta-plan']},
+          {load: readPlan, render: async (plan, out) => (await import('./render/run.ts')).renderPlan(plan, out)},
+        );
+        line(r);
+        return 0;
+      } catch (e) {
+        const error = (e instanceof ZodError ? formatZod(e).join('; ') : (e as Error).message).replace(/\s*\r?\n\s*/g, ' ');
+        line({ok: false, error});
+        process.stderr.write(`mr-video: ${error}\n`);
+        return 1;
+      }
     }
 
     case 'same': {

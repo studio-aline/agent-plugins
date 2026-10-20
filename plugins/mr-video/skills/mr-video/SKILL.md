@@ -63,6 +63,13 @@ MR 본문 맨 위에 넣는다. 명시적으로 요청받았을 때만 실행하
 
 6. **자체 확인**: `MRV preview <video> <plan.json>`이 만든 `preview.png` 이미지를 직접 열어 본다.
    글자 겹침·잘림·빈 장면이 있으면 plan을 고쳐 4번부터 다시 한다.
+   - **GitLab MCP가 없고 MR이 이미 있으면** 7~9번 대신 아래 한 줄로 끝낸다. 같은 plan을 다시 렌더한 뒤
+     업로드·본문 마커 블록 교체·저장 후 대조·기록 코멘트(`--delta-plan`이 있으면 변경분 영상)·작성 후 대조를 한 번에 한다.
+     `MRV publish --project <p> --iid N --plan plan.json [--delta-plan plan.delta.json]`
+     - `{"ok":true,...}`면 출력의 `videoSeconds`·`noteUrl`·`head`로 10번 보고를 한다.
+     - `"skipped":"same-head"`면 본문에 이미 같은 head 영상이 있어 아무것도 바꾸지 않았다고 알린다.
+     - `ok:false`면 `error`를 그대로 보고하고 멈춘다(본문 저장 뒤 코멘트만 실패했으면 오류 문구에 그렇게 나온다).
+   - GitLab MCP가 있으면 아래 7~9번대로 MCP로 저장한다.
 
 7. **업로드**: `MRV upload <video> --project <p>` → 결과 JSON을 `upload.json`으로 저장.
    갱신 라운드면 변경분 영상도 올려 `upload.delta.json`으로 저장한다.

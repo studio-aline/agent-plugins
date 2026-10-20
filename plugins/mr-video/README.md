@@ -20,6 +20,8 @@ Codex(`$mr-video`)에서 "MR에 설명 영상 넣어줘"라고 하면, 변경 �
 5. `note`로 기록 코멘트를 만들어 MR에 새 코멘트로 단다. 처음엔 본문과 같은 영상, 다시 만들 때는
    직전 영상 head..현재 head 변경분 영상. GitLab MCP가 없으면 `post-note`(GitLab API)로 단다.
 
+GitLab MCP가 없는 호스트나 plan만 쓰는 앱은 3~5를 `publish` 한 번으로 처리한다.
+
 장면 종류: `title` · `flow` · `mermaid`(노드 강조, 강조한 곳으로 화면 이동) · `code`(before → after 모핑) ·
 `table`(수정 전/후, 설계 결정 비교) · `terminal` · `tests` · `checklist` · `clip`(웹 화면 녹화).
 
@@ -60,7 +62,17 @@ Codex(`$mr-video`)에서 "MR에 설명 영상 넣어줘"라고 하면, 변경 �
 | `save-description --project p --iid N --current body.md` | GitLab MCP가 없는 호스트용 본문 저장 + 대조 |
 | `note --upload upload.json --plan plan.json [--delta]` | 기록 코멘트 본문 (`--delta`는 변경분 영상) |
 | `post-note --project p --iid N --current note.md` | GitLab MCP가 없는 호스트용 코멘트 작성 + 대조 |
+| `publish --project p --iid N --plan plan.json [--delta-plan plan.delta.json]` | render → upload → 본문 영상 교체·대조 → 기록 코멘트·대조를 한 번에(아래) |
 | `same a.md b.md` | 저장 전후 본문 대조(CRLF·BOM·끝 공백만 무시) |
+
+`publish`는 GitLab API로만 저장한다. stdout은 한 줄짜리 JSON 한 개다.
+
+- 성공: `{"ok":true,"videoSeconds":64.2,"noteUrl":"https://…#note_42","head":"abc1234"}`
+- 본문에 이미 같은 head 영상이 있으면 아무것도 바꾸지 않고 `{"ok":true,"skipped":"same-head","head":"abc1234"}`
+- 실패: `{"ok":false,"error":"<한 줄>"}` + 종료 코드 1. 업로드가 끝나기 전에는 MR을 건드리지 않는다.
+  본문 저장 뒤 코멘트만 실패하면 오류 문구에 그 사실이 들어간다.
+- `--delta-plan`이 있으면 그 plan을 따로 렌더·업로드해 변경분(`--delta`) 코멘트로 단다. 없으면 본문과 같은 영상을 단다.
+- plan의 `mr.project`·`mr.iid`가 인자와 다르거나, MR head가 `plan.mr.head`와 다르면 저장하지 않고 실패한다.
 
 ## 개발
 
