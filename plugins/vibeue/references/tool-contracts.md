@@ -6,8 +6,9 @@ Operational contracts for reliable VibeUE tool usage.
 
 When user input is a name without `/Game/...` path:
 
-1. Resolve with asset search:
-   - `manage_asset(action="search", search_term="<name>", asset_type="Blueprint")`
+1. Resolve with an AssetRegistry search through `execute_python_code`
+   (`ar.get_assets(unreal.ARFilter(class_paths=[unreal.TopLevelAssetPath("/Script/UMGEditor", "WidgetBlueprint")], recursive_classes=True))`,
+   then filter by `asset_name`).
 2. Select a `WidgetBlueprint` result.
 3. Use `package_name` as WidgetService path.
 4. If multiple candidates exist, ask user to pick one by folder/path.
@@ -38,8 +39,9 @@ When request asks to expand dependency/referencer relationships:
 1. Expand graph only when the user explicitly asks for dependency/referencer analysis.
 2. For binding-only mutation requests, skip graph expansion and continue with lightweight preflight.
 3. If graph expansion is requested, query both directions from the resolved BP path:
-   - `AssetDiscoveryService.get_asset_dependencies(path)`
-   - `AssetDiscoveryService.get_asset_referencers(path)`
+   - `ar.get_dependencies(package_name, opts)`
+   - `ar.get_referencers(package_name, opts)`
+     (`ar = unreal.AssetRegistryHelpers.get_asset_registry()`; `AssetDiscoveryService` no longer provides these)
 4. Use deterministic staged traversal with:
    - first pass default depth limit: 1
    - first pass default max nodes: 80
@@ -86,7 +88,7 @@ After ViewModel or binding mutations:
 5. Compile the Blueprint with `compile_blueprint(path)`.
 6. Report compile errors/warnings and applied/skipped actions.
 7. Tell the user to save in the editor if persistence is needed.
-8. Avoid routine programmatic saves (`save_asset`, `manage_asset(action="save")`, `save_all_assets`). Programmatic save can open a blocking editor popup; only attempt it when explicitly requested and the user is ready to handle the popup.
+8. Avoid routine programmatic saves (`save_asset`, `save_all_assets`, or leaving `execute_python_code`'s default `auto_save` on). Programmatic save can open a blocking editor popup; only attempt it when explicitly requested and the user is ready to handle the popup.
 9. Do not run UBT as routine VibeUE verification. Run it only when C++ source/header changes are in scope or the user explicitly requests a build; announce it first because it may take time.
 
 ## MVVM Binding Contract

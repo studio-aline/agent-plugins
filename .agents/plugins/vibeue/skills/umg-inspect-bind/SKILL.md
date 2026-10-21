@@ -11,10 +11,14 @@ description: Resolve a Widget Blueprint name, inspect its UMG hierarchy and Blue
 
 ## Step 0 — Activate VibeUE MCP Tools (mandatory first)
 
-1. Confirm a VibeUE MCP tool (for example `manage_asset`) is visible. If it is
-   not, load it through this host's MCP/tool discovery mechanism before
-   anything else — for a Codex-style deferred tool list, search for it
-   explicitly (e.g. `tool_search(query="vibeue manage_asset")`).
+1. Confirm the VibeUE MCP tools `execute_python_code` and `call_tool` are
+   visible. If not, load them through this host's MCP/tool discovery mechanism
+   before anything else (e.g. `tool_search(query="vibeue execute_python_code")`
+   for a Codex-style deferred tool list). With Unreal 5.8+ VibeUE is an
+   expansion of Unreal's native MCP server: its services are reached with
+   `execute_python_code` (`unreal.<Name>Service.<method>()`) or
+   `call_tool(toolset_name="VibeUE.<Name>Service", ...)`; there is no
+   `manage_asset` tool.
 2. Confirm an Unreal Editor instance with VibeUE loaded is running and
    reachable at the configured MCP endpoint. If the editor is not running or
    the VibeUE tools are unavailable, report that prerequisite to the user and
@@ -32,13 +36,17 @@ description: Resolve a Widget Blueprint name, inspect its UMG hierarchy and Blue
 
 ### A) InspectGraph (read-only)
 
-1. Resolve the Widget Blueprint path from name-only input (see `manage_asset`
-   search in `umg-mvvm-binding` "Critical Rules #1").
+1. Resolve the Widget Blueprint path from name-only input (see the
+   AssetRegistry search in `umg-mvvm-binding` "Critical Rules #1").
 2. Collect the hierarchy with `get_widget_snapshot(path)`.
 3. Expand Blueprint references only when the request explicitly asks for
    dependency/referencer expansion, using:
-   - `AssetDiscoveryService.get_asset_dependencies(path)`
-   - `AssetDiscoveryService.get_asset_referencers(path)`
+   - `ar.get_dependencies(package_name, opts)`
+   - `ar.get_referencers(package_name, opts)`
+
+   where `ar = unreal.AssetRegistryHelpers.get_asset_registry()` and
+   `opts = unreal.AssetRegistryDependencyOptions(include_soft_package_references=True, include_hard_package_references=True)`
+   (`AssetDiscoveryService` no longer has dependency/referencer methods).
 4. Return hierarchy plus optional graph report with truncation metadata.
 
 ### B) ApplyBinding (mutation)
@@ -127,14 +135,21 @@ Node connection API:
 - `disconnect_pin(bp, graph, node_id, pin_name)` — cut existing connection
 - `set_node_pin_value(bp, graph, node_id, pin_name, value)` — set literal default
 
-Node creation API:
+Node creation API (the per-node `add_branch_node`, `add_get_variable_node`,
+`add_set_variable_node`, `add_member_get_node`, and `add_function_call_node`
+helpers no longer exist in Python):
 
-- `add_branch_node(bp, graph, x, y)`
-- `add_get_variable_node(bp, graph, var_name, x, y)`
-- `add_set_variable_node(bp, graph, var_name, x, y)`
-- `add_member_get_node(bp, graph, class_name, member_name, x, y)`
-- `add_function_call_node(bp, graph, class_name, function_name, x, y)` — returns
-  empty string if the Action DB is not yet updated (editor restart needed)
+- `discover_nodes(bp, search_term, category="", max_results=20)` — find the
+  `spawner_key` for a node (results also carry `display_name` and `category`;
+  branch, variable get/set, member get, function call)
+- `create_node_by_key(bp, graph, spawner_key, x, y)` — create the node from a
+  discovered key; returns an empty string if the Action DB is not yet updated
+  (editor restart needed)
+- `add_function_call_on_variable(bp, graph, var_name, function_name, x, y)` —
+  Get node + function call + `self` wiring in one call
+- `build_graph(bp, graph, nodes, connections, pin_defaults, auto_layout, compile_after)`
+  — batch create/wire/set defaults in one transaction (use `"from_"` in
+  connection dicts)
 - `add_delegate_bind_node(bp, graph, class_name, delegate_name, x, y)`
 - `add_create_delegate_node(bp, graph, function_name, x, y)`
 
@@ -154,7 +169,9 @@ for item in nodes_desc:
 2. Never retry the same expansion call more than once.
 3. Avoid routine programmatic save — `save_asset` can trigger an editor save
    popup, making MCP wait or time out (`-32000`). Tell the user to save in the
-   editor if persistence is needed.
+   editor if persistence is needed. `execute_python_code` also saves all dirty
+   content before running by default; pass `auto_save="false"` for read-only
+   inspection and routine edits.
 4. Do not run UBT as routine finalization. Run it only for in-scope C++
    source/header changes or an explicit user request, and announce it first
    because it may take time.
@@ -222,5 +239,6 @@ detail.
 - Prompt examples and regression checks: `../../references/maintenance-examples.md`
 - If the target project vendors the VibeUE Unreal plugin, it may also bundle
   its own skill docs (for example under a plugin content/skills path); query
-  `manage_skills(action="suggest", query="...")` if that MCP method is
-  available and this skill's guidance is insufficient.
+  `call_tool(toolset_name="ToolsetRegistry.AgentSkillToolset", tool_name="ListSkills")`
+  then `GetSkills` (arguments `{"skillPaths": [...]}`) if this skill's
+  guidance is insufficient.

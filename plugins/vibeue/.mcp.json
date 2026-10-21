@@ -2,7 +2,7 @@
   "mcpServers": {
     "VibeUE": {
       "command": "node",
-      "args": ["${CLAUDE_PLUGIN_ROOT}/scripts/launch-mcp-remote.mjs"]
+      "args": ["${CLAUDE_PLUGIN_ROOT}/scripts/vibeue-proxy.mjs"]
     }
   }
 }

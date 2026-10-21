@@ -61,7 +61,7 @@ this file needs updating too:
 - [ ] Agent did NOT fall back to manual `.uasset` inspection when MCP tools
       appeared unavailable.
 - [ ] UMG/MVVM mutation path did NOT call `save_asset`,
-      `manage_asset(action="save")`, or `save_all_assets` as routine
+      or `save_all_assets` as routine
       finalization.
 - [ ] UMG/MVVM mutation path compiled the Blueprint, reported errors/warnings,
       and told the user to save in the editor if persistence is needed.

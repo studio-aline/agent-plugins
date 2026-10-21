@@ -1,6 +1,6 @@
 {
   "name": "vibeue",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Inspect and bind UMG Widget Blueprints through the VibeUE Unreal Engine MCP server.",
   "author": {
     "name": "X7 Team"
@@ -11,7 +11,7 @@
   "mcpServers": {
     "VibeUE": {
       "command": "node",
-      "args": ["./scripts/launch-mcp-remote.mjs"],
+      "args": ["./scripts/vibeue-proxy.mjs"],
       "cwd": "."
     }
   },

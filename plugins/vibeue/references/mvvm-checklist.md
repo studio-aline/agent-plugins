@@ -25,7 +25,7 @@ Use this checklist when applying MVVM changes.
 4. For SetCommand command bindings, confirm the ViewModel command member is bound to the target MvvmButton command setter.
 5. Compile the Blueprint and report errors/warnings.
 6. Tell the user to save in the editor if persistence is needed.
-7. Avoid routine programmatic saves (`save_asset`, `manage_asset(action="save")`, `save_all_assets`); programmatic save can open a blocking editor popup.
+7. Avoid routine programmatic saves (`save_asset`, `save_all_assets`; pass `auto_save="false"` to `execute_python_code`); programmatic save can open a blocking editor popup.
 
 ## Fast Failure Hints
 

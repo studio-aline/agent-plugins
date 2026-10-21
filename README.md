@@ -83,8 +83,9 @@ and command namespaces, such as `guidance`, `/codex:*`, and `/git:*`.
 - `/vibeue:umg-mvvm-binding` — register MVVM ViewModels and manage property
   bindings and MvvmButton `SetCommand` command bindings.
 - Connects to the [VibeUE](https://github.com/kevinpbuckley/VibeUE) MCP server
-  running inside a local Unreal Editor (`http://127.0.0.1:8088/mcp` by
-  default) through `mcp-remote`. Refuses to fall back to manual `.uasset`
+  running inside a local Unreal Editor (`http://127.0.0.1:8080/mcp` by
+  default) through a stdio proxy that serves the Unreal MCP tool list until the editor
+  is open and then forwards requests. Refuses to fall back to manual `.uasset`
   binary inspection when the MCP tools are unavailable.
 
 ### `mr-video`
@@ -122,9 +123,9 @@ and command namespaces, such as `guidance`, `/codex:*`, and `/git:*`.
 - curl on `PATH` for the unauthenticated `internal-web` fallback (`curl.exe` on
   Windows).
 - ripgrep on `PATH` for the `ripgrep` plugin (`rg --version` to verify).
-- `npx` on `PATH` and a running Unreal Editor with the VibeUE plugin loaded
-  for the `vibeue` plugin. Its MCP server defaults to port `8088`; override
-  with `VIBEUE_MCP_PORT` if the project's VibeUE proxy uses a different port.
+- Node.js on `PATH` for the `vibeue` plugin; its tools work once an Unreal
+  Editor with the VibeUE plugin loaded is running. Its MCP server defaults to
+  port `8080`; override with `VIBEUE_MCP_PORT` for a different port.
 - Windows, Node.js with npm, and Git on `PATH` for the `mr-video` plugin, plus
   `GITLAB_HOST` and `GITLAB_TOKEN` set: a personal access token with `api` scope.
   A project or group access token acts as a bot account and cannot edit MR

@@ -178,8 +178,9 @@ Action DB is not updated until editor restarts. `discover_nodes()` returns 0 res
 # Wrong — returns empty after hot-reload
 unreal.BlueprintService.discover_nodes(bp, "NewFunction")
 
-# Correct — use add_function_call_node directly with class + function name
-node_id = unreal.BlueprintService.add_function_call_node(
+# Correct — add_function_call_node no longer exists in Python; for a function
+# on a Blueprint variable use add_function_call_on_variable
+node_id = unreal.BlueprintService.add_function_call_on_variable(
     bp, graph, "MyViewModel", "NewFunction", pos_x, pos_y)
 # Returns empty string if Action DB still not updated — full editor restart needed.
 ```
@@ -287,7 +288,7 @@ print("compile:", unreal.BlueprintService.compile_blueprint(bp_path), "- tell us
 
 ## 15. Programmatic save can block on an editor popup
 
-Calling `EditorAssetLibrary.save_asset()` or `manage_asset(action='save')` can trigger the editor's save or checkout confirmation popup. While that modal is open, MCP may wait or time out (-32000), which looks like the server stopped even though the editor is waiting for user input.
+Calling `EditorAssetLibrary.save_asset()` — or running `execute_python_code` with its default `auto_save` (it saves all dirty content first; pass `auto_save="false"`) — can trigger the editor's save or checkout confirmation popup. While that modal is open, MCP may wait or time out (-32000), which looks like the server stopped even though the editor is waiting for user input.
 
 ```python
 # Avoid as routine finalization: may open a blocking editor popup
@@ -313,7 +314,7 @@ If the user explicitly requests BP graph work (e.g. "wire the button", "connect 
 
 ```python
 # Outside default scope — only do this when explicitly requested
-add_function_call_node(bp, graph, "SequenceViewModel", "OnHoldSkipPressed", x, y)
+add_function_call_on_variable(bp, graph, "SequenceViewModel", "OnHoldSkipPressed", x, y)
 
 # Default scope — always applicable
 # ViewModel FieldNotify -> MVVM binding
@@ -386,9 +387,13 @@ nodes = unreal.BlueprintService.get_nodes_in_graph(bp_path, graph)
 ec    = next(n for n in nodes if n.node_type == "K2Node_Event" and "Construct" in n.node_title and "Pre" not in n.node_title)
 
 # Add init chain: EC -> Get ViewModel -> Get Property -> Set BP Variable
-get_vm_id  = unreal.BlueprintService.add_get_variable_node(bp_path, graph, "MyViewModel", 200, ec.pos_y - 80)
-get_prop_id = unreal.BlueprintService.add_member_get_node(bp_path, graph, "MyViewModel", "MyFloatProp", 400, ec.pos_y - 80)
-set_var_id = unreal.BlueprintService.add_set_variable_node(bp_path, graph, "MyLocalVar", 600, ec.pos_y - 80)
+# Spawner keys come from discover_nodes; print the results and pick the matching key.
+for term in ("MyViewModel", "MyFloatProp", "Set MyLocalVar"):
+    for info in unreal.BlueprintService.discover_nodes(bp_path, term):
+        print(term, "->", info.display_name, info.spawner_key)
+get_vm_id   = unreal.BlueprintService.create_node_by_key(bp_path, graph, "<key for Get MyViewModel>", 200, ec.pos_y - 80)
+get_prop_id = unreal.BlueprintService.create_node_by_key(bp_path, graph, "<key for MyViewModel.MyFloatProp>", 400, ec.pos_y - 80)
+set_var_id  = unreal.BlueprintService.create_node_by_key(bp_path, graph, "<key for Set MyLocalVar>", 600, ec.pos_y - 80)
 
 unreal.BlueprintService.connect_nodes(bp_path, graph, ec.node_id, "then", set_var_id, "execute")
 unreal.BlueprintService.connect_nodes(bp_path, graph, get_vm_id, "MyViewModel", get_prop_id, "self")

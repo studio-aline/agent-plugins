@@ -30,9 +30,9 @@ Failures" table is not enough.
 
 | Symptom | Likely cause | Next step |
 |---|---|---|
-| VibeUE MCP tools not visible | Tool group not loaded yet, or Unreal Editor not running | Re-run this host's MCP/tool discovery step (Step 0 in either skill); confirm the editor is open and interactive |
+| VibeUE MCP tools not visible, or only the offline tool list answers "Unreal Editor is not running" | Tool group not loaded yet, Unreal Editor not running, or Unreal's MCP server not started (Editor Preferences → Model Context Protocol → Auto Start Server, or console `ModelContextProtocol.StartServer`) | Re-run this host's MCP/tool discovery step (Step 0 in either skill); confirm the editor is open and interactive |
 | MCP call hangs or times out (`-32000`) | Unreal Editor has a blocking modal (Save/checkout popup) | Tell the user to resolve the popup in the editor, then retry |
-| Widget/Blueprint not found by name | Ambiguous or unresolved name-only input | Search with `manage_asset(action="search", ...)`, disambiguate by folder/path if multiple `WidgetBlueprint` candidates exist |
+| Widget/Blueprint not found by name | Ambiguous or unresolved name-only input | Search the AssetRegistry with `execute_python_code`, disambiguate by folder/path if multiple `WidgetBlueprint` candidates exist |
 | `add_view_model_binding` returns `False` | ViewModel alias missing, widget not found, or destination is a custom event | See `umg-mvvm-binding` "Common Failures" table |
 | Binding applied but runtime value is wrong | Wrong binding mode chosen | Re-check the Binding Mode Matrix in `umg-mvvm-binding` |
 | Field name / return type errors in Python | Using vendored-plugin C++ naming instead of the actual snake_case Python API | Check `vibeue-mcp-pitfalls.md` |

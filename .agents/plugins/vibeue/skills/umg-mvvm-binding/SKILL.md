@@ -28,10 +28,14 @@ For mixed inspect+bind requests, start with `../umg-inspect-bind/SKILL.md`.
 
 ## Step 0 — Activate VibeUE MCP Tools
 
-1. Confirm a VibeUE MCP tool (for example `manage_asset`) is visible. If it is
-   not, load it through this host's MCP/tool discovery mechanism before
-   anything else (e.g. `tool_search(query="vibeue manage_asset")` for a
-   Codex-style deferred tool list).
+1. Confirm the VibeUE MCP tools `execute_python_code` and `call_tool` are
+   visible. If not, load them through this host's MCP/tool discovery mechanism
+   before anything else (e.g. `tool_search(query="vibeue execute_python_code")`
+   for a Codex-style deferred tool list). With Unreal 5.8+ VibeUE is an
+   expansion of Unreal's native MCP server: its services are reached with
+   `execute_python_code` (`unreal.<Name>Service.<method>()`) or
+   `call_tool(toolset_name="VibeUE.<Name>Service", ...)`; there is no
+   `manage_asset` tool.
 2. Confirm an Unreal Editor instance with VibeUE loaded is running and
    reachable. If not, report the prerequisite to the user and stop.
 3. Do NOT parse `.uasset` binary files with file search, grep, Python, or
@@ -64,7 +68,20 @@ fetching all.
 
 ### 1) Resolve pathless BP names first
 
-Search: `manage_asset(action="search", search_term="<name>", asset_type="Blueprint")`
+Search the AssetRegistry with `execute_python_code` (the engine's AssetTools
+toolset may not be enabled, so do not depend on it):
+
+```python
+import unreal
+ar = unreal.AssetRegistryHelpers.get_asset_registry()
+flt = unreal.ARFilter(
+    class_paths=[unreal.TopLevelAssetPath("/Script/UMGEditor", "WidgetBlueprint")],
+    recursive_classes=True)
+for a in ar.get_assets(flt):
+    if "<name>".lower() in str(a.asset_name).lower():
+        print(a.package_name)   # WidgetService path
+```
+
 Use `package_name` from a `WidgetBlueprint` result.
 
 ### 2) Single-call preflight
@@ -192,14 +209,30 @@ print(f"compile: errors={result.num_errors} warnings={result.num_warnings}")
 ```
 
 ### Workflow D: Idempotent Upsert
+
+`list_view_model_bindings` only returns property names (`source_path` is the
+ViewModel property, `destination_path` is the widget property); it does NOT
+include the ViewModel alias or the widget name, so two widgets with the same
+property look identical. Check for an existing binding through the raw MVVM
+binding text instead (it carries `WidgetName`):
+
 ```python
+import re
 import unreal
 path = "/Game/UI/WBP_HUD"
+
+def binding_exists(path, vm_prop, widget, widget_prop):
+    view = unreal.get_editor_subsystem(unreal.MVVMEditorSubsystem).get_view(unreal.load_asset(path))
+    pat = re.compile(
+        r'SourcePath=\(Paths=\(\(BindingReference=\([^)]*?MemberName="%s"' % re.escape(vm_prop)
+        + r'.*?DestinationPath=\(Paths=\(\(BindingReference=\([^)]*?MemberName="%s"' % re.escape(widget_prop)
+        + r'.*?WidgetName="%s"' % re.escape(widget))
+    return any(pat.search(b.export_text()) for b in view.get_editor_property("bindings"))
+
 vms = unreal.WidgetService.list_view_models(path)
 if not any(v.view_model_name == "HudVM" for v in vms):
     print("CREATED_VM:", unreal.WidgetService.add_view_model(path, "GameHUDViewModel", "HudVM", "CreateInstance"))
-bindings = unreal.WidgetService.list_view_model_bindings(path)
-if not any("HudVM" in b.source_path and "HealthBar" in b.destination_path for b in bindings):
+if not binding_exists(path, "HealthPercent", "HealthBar", "Percent"):
     print("CREATED_BIND:", unreal.WidgetService.add_view_model_binding(
         path, "HudVM", "HealthPercent", "HealthBar", "Percent", "OneWayToDestination"))
 result = unreal.BlueprintService.compile_blueprint(path)
@@ -297,6 +330,8 @@ def make_ce_binding(vm_class_ref, vm_prop, ce_name, ce_guid, ctx_id):
     )
 
 # Replace with exact targets. vm_class_ref must be the quoted class reference from reflection.
+# expected_pin_type is matched against str(pin.pin_type): a float/double property
+# reports "real" (not "float"). Print the CE node's pins first when unsure.
 targets = [
     ('"/Script/CoreUObject.Class\'/Script/YourModule.MyViewModel\'"', "MyProp", "bool", "MyCE"),
 ]
